@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Format, analyze and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+          cache: true
+
+      - name: Get dependencies
+        run: dart pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Generate code
+        working-directory: packages/quiz_core
+        run: dart run build_runner build -d
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+      - name: Test quiz_core
+        working-directory: packages/quiz_core
+        run: dart test
+
+      - name: Test server
+        working-directory: server
+        run: dart test
+
+      - name: Test app
+        working-directory: app
+        run: flutter test
