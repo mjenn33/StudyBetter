@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_riverpod: ^3.4.3
+  go_router: ^18.1.1
   quiz_core: any
 
 dev_dependencies:
