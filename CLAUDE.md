@@ -3,7 +3,7 @@
 Guidance for Claude Code when working in this repository.
 
 ## Project
-**Quiz App** — a Flutter app for **Android and Windows** to create and take
+**StudyBetter** — a Flutter app for **Android and Windows** to create and take
 multiple-choice quizzes, get evaluated with metrics (scores, trends, per-question
 accuracy, weakest questions), and study **flashcards** with spaced repetition.
 A **Dart server** lets users publish their quizzes/decks and download content made

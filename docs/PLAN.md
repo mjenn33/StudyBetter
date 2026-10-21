@@ -1,4 +1,4 @@
-# Quiz App — Project Plan
+# StudyBetter — Project Plan
 
 A cross-platform (Android + Windows desktop) Flutter app for creating and taking
 multiple-choice quizzes, tracking performance metrics, and studying flashcards,
@@ -80,7 +80,7 @@ made by others.
 ## 3. Repository layout (monorepo, Dart pub workspace)
 
 ```
-quiz_app/
+StudyBetter/
 ├── app/                    # Flutter client (android + windows)
 │   └── lib/
 │       ├── main.dart

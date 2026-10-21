@@ -1,4 +1,4 @@
-# Quiz App
+# StudyBetter
 
 Create multiple-choice quizzes, take them, and track how you're improving —
 plus flashcards with spaced repetition. Built with **Flutter** for **Android** and
