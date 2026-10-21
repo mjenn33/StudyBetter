@@ -1,5 +1,7 @@
 # StudyBetter
 
+[![CI](https://github.com/mjenn33/StudyBetter/actions/workflows/ci.yml/badge.svg)](https://github.com/mjenn33/StudyBetter/actions/workflows/ci.yml)
+
 Create multiple-choice quizzes, take them, and track how you're improving —
 plus flashcards with spaced repetition. Built with **Flutter** for **Android** and
 **Windows**, with a **Dart server** for sharing quizzes and decks.
