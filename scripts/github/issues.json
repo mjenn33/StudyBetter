@@ -1,0 +1,297 @@
+{
+  "milestones": [
+    {"title": "M0 Foundation", "description": "Monorepo, workspace, lints, CI, app runs on Android + Windows, server \"hello world\"."},
+    {"title": "M1 Core models & local storage", "description": "quiz_core models/validation/JSON, Drift database, repositories."},
+    {"title": "M2 Quiz authoring", "description": "Quiz library, quiz editor, question editor, JSON import/export."},
+    {"title": "M3 Quiz taking & evaluation", "description": "Player, timer, scoring, results and review screens, attempts saved."},
+    {"title": "M4 Metrics", "description": "Per-quiz stats, weakest questions, global dashboard with charts."},
+    {"title": "M5 Flashcards", "description": "Decks, card editor, study session, SM-2 scheduling, due counts."},
+    {"title": "M6 Server", "description": "Postgres schema, auth, quizzes/decks endpoints, search, Docker."},
+    {"title": "M7 Sync & catalog", "description": "Login in app, publish, browse/search catalog, download, updates, conflicts."},
+    {"title": "M8 Polish & release", "description": "Responsive desktop layout, theming/dark mode, accessibility, tests, Android & Windows release builds."}
+  ],
+  "labels": [
+    {"name": "roadmap", "color": "5319e7", "description": "Task from docs/PLAN.md"},
+    {"name": "area:core", "color": "0e8a16", "description": "packages/quiz_core"},
+    {"name": "area:app", "color": "1d76db", "description": "Flutter app"},
+    {"name": "area:server", "color": "b60205", "description": "Dart server / PostgreSQL"},
+    {"name": "area:infra", "color": "fbca04", "description": "Workspace, CI, Docker, releases"}
+  ],
+  "issues": [
+    {
+      "milestone": "M0 Foundation", "labels": ["area:infra"],
+      "title": "Set up Dart pub workspace monorepo",
+      "body": "Create the monorepo described in docs/PLAN.md §3.\n\n**Done when**\n- [ ] Root `pubspec.yaml` declares a pub workspace with `app/`, `server/`, `packages/quiz_core/`\n- [ ] Root `analysis_options.yaml` (`lints/recommended` + strict casts)\n- [ ] Root `.gitignore` ignores build output and generated `*.g.dart` / `*.freezed.dart`\n- [ ] `dart pub get` from the root resolves the whole workspace"
+    },
+    {
+      "milestone": "M0 Foundation", "labels": ["area:core"],
+      "title": "Create quiz_core package skeleton",
+      "body": "Pure Dart package shared by app and server (`packages/quiz_core`).\n\n**Done when**\n- [ ] Package with `lib/src/{models,validation,scoring,srs}` folders and a public barrel file\n- [ ] freezed, json_serializable and build_runner configured\n- [ ] `dart test` runs with a sample test\n- [ ] No Flutter or server-only dependencies"
+    },
+    {
+      "milestone": "M0 Foundation", "labels": ["area:app"],
+      "title": "Create Flutter app scaffold for Android and Windows",
+      "body": "Flutter client in `app/` targeting Android and Windows only.\n\n**Done when**\n- [ ] `app/` created with Android and Windows platforms (app name StudyBetter)\n- [ ] `app/analysis_options.yaml` builds on `flutter_lints`\n- [ ] Depends on `quiz_core` via the workspace\n- [ ] `flutter run -d windows` and an Android emulator both start the app\n- [ ] Feature-first folders under `lib/` (`app/`, `data/`, `features/`)"
+    },
+    {
+      "milestone": "M0 Foundation", "labels": ["area:app"],
+      "title": "App shell: Riverpod, go_router, theme and navigation",
+      "body": "Bootstrap the app so features can be plugged in.\n\n**Done when**\n- [ ] `ProviderScope` and app bootstrap in `lib/app/`\n- [ ] go_router with placeholder routes: Quizzes, Flashcards, Stats, Catalog, Settings\n- [ ] Material 3 theme\n- [ ] Navigation rail on wide screens, bottom navigation bar on narrow screens"
+    },
+    {
+      "milestone": "M0 Foundation", "labels": ["area:server"],
+      "title": "Server hello world with health endpoint",
+      "body": "Dart shelf server in `server/`.\n\n**Done when**\n- [ ] `bin/server.dart` serves `GET /api/v1/health` → `200 {\"status\":\"ok\"}`\n- [ ] Config (port, DB URL, JWT secret) read from environment in `lib/config.dart`\n- [ ] Request logging middleware\n- [ ] One route test for `/health`"
+    },
+    {
+      "milestone": "M0 Foundation", "labels": ["area:infra", "area:server"],
+      "title": "Docker Compose for PostgreSQL and server",
+      "body": "**Done when**\n- [ ] `server/Dockerfile` (AOT-compiled server)\n- [ ] `docker-compose.yml` with `db` (PostgreSQL) and `server` services\n- [ ] `docker compose up -d db` gives a database the server can reach locally\n- [ ] Example env file documented in README"
+    },
+    {
+      "milestone": "M0 Foundation", "labels": ["area:infra"],
+      "title": "CI: format, analyze and test on GitHub Actions",
+      "body": "**Done when**\n- [ ] Workflow runs on PRs and pushes to `main`\n- [ ] Runs `build_runner`, `dart format --set-exit-if-changed .`, `dart analyze`\n- [ ] Runs tests for `quiz_core`, `app` and `server`\n- [ ] README shows the CI badge"
+    },
+    {
+      "milestone": "M1 Core models & local storage", "labels": ["area:core"],
+      "title": "quiz_core: Quiz, Question, Option and QuizSettings models",
+      "body": "Models for the quiz document in docs/PLAN.md §4.\n\n**Done when**\n- [ ] freezed models with `toJson` / `fromJson` for all quiz fields (`schemaVersion`, `kind`, `id`, `version`, timestamps, `settings`, `questions`)\n- [ ] `QuestionType` enum: `single`, `multiple`\n- [ ] JSON round-trip tests using the sample document from the plan"
+    },
+    {
+      "milestone": "M1 Core models & local storage", "labels": ["area:core"],
+      "title": "quiz_core: FlashcardDeck and Flashcard models",
+      "body": "Models for the deck document in docs/PLAN.md §4.\n\n**Done when**\n- [ ] freezed models with JSON support (`kind: flashcardDeck`, `cards` with `front`, `back`, `hint`)\n- [ ] JSON round-trip tests"
+    },
+    {
+      "milestone": "M1 Core models & local storage", "labels": ["area:core"],
+      "title": "quiz_core: document validation",
+      "body": "Pure validation functions used by the app editor and by the server on upload.\n\n**Done when**\n- [ ] Quiz rules: ≥1 question, 2–10 options per question, ≥1 correct option, `single` ⇒ exactly one correct, unique ids, non-empty text\n- [ ] Deck rules: ≥1 card, unique ids, non-empty front/back\n- [ ] Returns a list of errors with a path (e.g. `questions[2].options`) rather than throwing\n- [ ] Unit tests for every rule"
+    },
+    {
+      "milestone": "M1 Core models & local storage", "labels": ["area:core"],
+      "title": "quiz_core: schemaVersion handling and migrations",
+      "body": "Parse any supported document version into the current model.\n\n**Done when**\n- [ ] `parseDocument(Map json)` reads `kind` and `schemaVersion` and dispatches\n- [ ] Migration pipeline `vN → vN+1` (empty for v1, but tested with a fake v0)\n- [ ] Clear error for unknown `kind` or a newer-than-supported `schemaVersion`\n- [ ] Sample v1 documents kept under `test/fixtures/`"
+    },
+    {
+      "milestone": "M1 Core models & local storage", "labels": ["area:core", "documentation"],
+      "title": "docs: data-format.md reference",
+      "body": "**Done when**\n- [ ] `docs/data-format.md` documents quiz and deck documents field by field, validation rules and versioning policy\n- [ ] Linked from README and PLAN"
+    },
+    {
+      "milestone": "M1 Core models & local storage", "labels": ["area:app"],
+      "title": "Drift database with all local tables",
+      "body": "Local database from docs/PLAN.md §5.\n\n**Done when**\n- [ ] Tables: `quizzes`, `attempts`, `attempt_answers`, `decks`, `card_reviews`, `review_log`, `settings`\n- [ ] Works on Android and Windows (sqlite3 bundled)\n- [ ] Schema version and migration strategy in place\n- [ ] Tests with an in-memory database"
+    },
+    {
+      "milestone": "M1 Core models & local storage", "labels": ["area:app"],
+      "title": "Quiz and deck repositories",
+      "body": "**Done when**\n- [ ] `QuizRepository` and `DeckRepository`: watch list, get by id, save (bumps `version` and `updatedAt`), duplicate, soft delete\n- [ ] Stores the full document as JSON text plus denormalized columns (title, tags, origin, remote fields)\n- [ ] Exposed through Riverpod providers\n- [ ] Repository tests with in-memory Drift"
+    },
+    {
+      "milestone": "M1 Core models & local storage", "labels": ["area:app"],
+      "title": "Attempt and review-state repositories",
+      "body": "Personal data that never goes into the shared document.\n\n**Done when**\n- [ ] `AttemptRepository`: save attempt with per-question answers, list attempts per quiz\n- [ ] `ReviewRepository`: read/write per-card review state and append to `review_log`\n- [ ] Repository tests"
+    },
+    {
+      "milestone": "M2 Quiz authoring", "labels": ["area:app"],
+      "title": "Quiz library screen",
+      "body": "**Done when**\n- [ ] Lists local quizzes (title, question count, tags, last updated)\n- [ ] Search by title and filter by tag\n- [ ] Actions: open, play, edit, duplicate, delete (with undo)\n- [ ] Empty state with \"Create quiz\" and \"Import\""
+    },
+    {
+      "milestone": "M2 Quiz authoring", "labels": ["area:app"],
+      "title": "Quiz editor: metadata and settings",
+      "body": "**Done when**\n- [ ] Edit title, description, language, tags\n- [ ] Settings: shuffle questions, shuffle options, time limit, passing score %\n- [ ] Question list with add, delete and drag-to-reorder\n- [ ] Unsaved-changes warning on leave"
+    },
+    {
+      "milestone": "M2 Quiz authoring", "labels": ["area:app"],
+      "title": "Question editor",
+      "body": "**Done when**\n- [ ] Prompt, type (single / multiple), 2–10 options, mark correct option(s)\n- [ ] Optional explanation and points\n- [ ] Switching to `single` with several correct options asks which one to keep\n- [ ] Widget tests"
+    },
+    {
+      "milestone": "M2 Quiz authoring", "labels": ["area:app"],
+      "title": "Show validation errors in the quiz editor",
+      "body": "Use `quiz_core` validation in the editor.\n\n**Done when**\n- [ ] Errors shown next to the offending field / question\n- [ ] Saving an invalid quiz is allowed as draft but playing/exporting is blocked with a clear message"
+    },
+    {
+      "milestone": "M2 Quiz authoring", "labels": ["area:app"],
+      "title": "Import and export quizzes as JSON files",
+      "body": "**Done when**\n- [ ] Export a quiz to a `.json` file (save dialog on Windows, share/save on Android)\n- [ ] Import from a file: parse with migrations, validate, show errors\n- [ ] Importing a quiz whose id already exists offers \"replace\" or \"import as copy\"\n- [ ] Exported files re-import identically (round-trip test)"
+    },
+    {
+      "milestone": "M3 Quiz taking & evaluation", "labels": ["area:core"],
+      "title": "quiz_core: scoring",
+      "body": "Pure scoring functions.\n\n**Done when**\n- [ ] Score a question: correct only if the selected set equals the correct set; unanswered = skipped\n- [ ] Score an attempt: points, max points, percent, pass/fail vs `passingScorePercent`, correct/incorrect/skipped counts\n- [ ] Unit tests incl. multi-answer and skipped cases"
+    },
+    {
+      "milestone": "M3 Quiz taking & evaluation", "labels": ["area:app"],
+      "title": "Quiz player screen",
+      "body": "**Done when**\n- [ ] One question at a time with progress indicator\n- [ ] Radio buttons for `single`, checkboxes for `multiple`\n- [ ] Shuffles questions/options per quiz settings\n- [ ] Next / previous / skip, finish with confirmation if questions are unanswered\n- [ ] Keyboard shortcuts on desktop (1–9 select, Enter next)\n- [ ] Logic in a Riverpod controller with unit tests"
+    },
+    {
+      "milestone": "M3 Quiz taking & evaluation", "labels": ["area:app"],
+      "title": "Quiz time limit and per-question timing",
+      "body": "**Done when**\n- [ ] Countdown when `timeLimitSeconds` is set; auto-finish at zero\n- [ ] Time spent per question recorded in milliseconds\n- [ ] Timer pauses when the app goes to background on Android"
+    },
+    {
+      "milestone": "M3 Quiz taking & evaluation", "labels": ["area:app"],
+      "title": "Save attempts with per-question answers",
+      "body": "**Done when**\n- [ ] Finishing a quiz stores an attempt (quizId, quizVersion, start/finish, score, max score, duration) and every answer (selected ids, correct?, time ms)\n- [ ] Abandoned attempts are not saved"
+    },
+    {
+      "milestone": "M3 Quiz taking & evaluation", "labels": ["area:app"],
+      "title": "Results screen",
+      "body": "**Done when**\n- [ ] Shows score (points and %), pass/fail, correct/incorrect/skipped, total and average time per question\n- [ ] Buttons: review answers, retry, back to library"
+    },
+    {
+      "milestone": "M3 Quiz taking & evaluation", "labels": ["area:app"],
+      "title": "Answer review screen",
+      "body": "**Done when**\n- [ ] Every question with the user's answer vs the correct answer and the explanation\n- [ ] Filter: all / incorrect only\n- [ ] Reachable from results and from attempt history"
+    },
+    {
+      "milestone": "M4 Metrics", "labels": ["area:app"],
+      "title": "Stats queries for attempts",
+      "body": "Drift queries feeding the metrics screens.\n\n**Done when**\n- [ ] Per quiz: attempt count, best / average / last score, scores over time, average time per question\n- [ ] Per question: accuracy across attempts (handles questions removed in later quiz versions)\n- [ ] Global: quizzes taken, questions answered, overall accuracy, attempts per day for last 30 days\n- [ ] Tests with seeded data"
+    },
+    {
+      "milestone": "M4 Metrics", "labels": ["area:app"],
+      "title": "Per-quiz stats screen with score trend chart",
+      "body": "**Done when**\n- [ ] Summary tiles: attempts, best, average, last score\n- [ ] fl_chart line chart of score % per attempt with the passing line\n- [ ] Attempt history list linking to the review screen"
+    },
+    {
+      "milestone": "M4 Metrics", "labels": ["area:app"],
+      "title": "Weakest questions and practice mode",
+      "body": "**Done when**\n- [ ] Per-question accuracy list sorted weakest first on the quiz stats screen\n- [ ] \"Practice weakest questions\" starts the player with the N lowest-accuracy questions\n- [ ] Practice attempts are marked as practice and excluded from the main score trend"
+    },
+    {
+      "milestone": "M4 Metrics", "labels": ["area:app"],
+      "title": "Global stats dashboard",
+      "body": "**Done when**\n- [ ] Totals: quizzes taken, questions answered, overall accuracy\n- [ ] 30-day activity chart (attempts per day)\n- [ ] Flashcard section: due today, cards learned, review streak, retention rate (once M5 lands)"
+    },
+    {
+      "milestone": "M5 Flashcards", "labels": ["area:core"],
+      "title": "quiz_core: SM-2 spaced repetition scheduler",
+      "body": "**Done when**\n- [ ] `ReviewState next(ReviewState current, Grade grade, DateTime now)` as a pure function\n- [ ] Grades Again / Hard / Good / Easy map to SM-2 quality 0 / 3 / 4 / 5\n- [ ] Tracks ease factor (min 1.3), interval, repetitions, due date, lapses\n- [ ] Unit tests for each grade, lapses and ease floor"
+    },
+    {
+      "milestone": "M5 Flashcards", "labels": ["area:app"],
+      "title": "Deck library and deck editor",
+      "body": "**Done when**\n- [ ] Deck list with card count and due count\n- [ ] Create / edit / duplicate / delete decks (title, description, language, tags)\n- [ ] Card list inside the deck editor with add, delete and reorder"
+    },
+    {
+      "milestone": "M5 Flashcards", "labels": ["area:app"],
+      "title": "Flashcard editor",
+      "body": "**Done when**\n- [ ] Edit front, back and optional hint\n- [ ] \"Save and add next\" for fast entry\n- [ ] Validation via `quiz_core`"
+    },
+    {
+      "milestone": "M5 Flashcards", "labels": ["area:app"],
+      "title": "Flashcard study session",
+      "body": "**Done when**\n- [ ] Shows front, tap/space to flip, grade Again / Hard / Good / Easy (keys 1–4 on desktop)\n- [ ] \"Due cards\" mode updates review state via SM-2 and logs each review\n- [ ] \"Cram all cards\" mode does not change scheduling\n- [ ] Session summary at the end"
+    },
+    {
+      "milestone": "M5 Flashcards", "labels": ["area:app"],
+      "title": "Daily new-card limit, due counts and streaks",
+      "body": "**Done when**\n- [ ] Setting for new cards per day (default 20)\n- [ ] Due counts per deck and in total\n- [ ] Review streak (consecutive days with ≥1 review)"
+    },
+    {
+      "milestone": "M5 Flashcards", "labels": ["area:app"],
+      "title": "Import and export decks as JSON files",
+      "body": "Same behaviour as quiz import/export, for decks.\n\n**Done when**\n- [ ] Export / import `.json` decks with validation and id-conflict handling\n- [ ] Review state is never exported"
+    },
+    {
+      "milestone": "M6 Server", "labels": ["area:server"],
+      "title": "PostgreSQL schema and migration runner",
+      "body": "**Done when**\n- [ ] SQL migrations in `server/migrations/` for `users`, `refresh_tokens`, `quizzes`, `decks` (columns from docs/PLAN.md §8)\n- [ ] `tsvector` index on title/description/tags\n- [ ] Migrations run automatically at startup and are tracked in a table"
+    },
+    {
+      "milestone": "M6 Server", "labels": ["area:server"],
+      "title": "Auth: register, login, refresh and JWT middleware",
+      "body": "**Done when**\n- [ ] `POST /auth/register`, `/auth/login`, `/auth/refresh`; `GET /me`\n- [ ] Passwords hashed with argon2 or bcrypt\n- [ ] Short-lived access token + rotating refresh token stored hashed\n- [ ] Middleware sets the current user; 401 on missing/invalid token"
+    },
+    {
+      "milestone": "M6 Server", "labels": ["area:server"],
+      "title": "Quiz endpoints",
+      "body": "**Done when**\n- [ ] `GET /quizzes/{id}`, `POST /quizzes`, `PUT /quizzes/{id}`, `DELETE /quizzes/{id}`, `GET /me/quizzes`\n- [ ] Every upload validated with `quiz_core`; 422 with error list on failure\n- [ ] `PUT` requires `If-Match: <version>`; 409 on mismatch\n- [ ] Only the owner can update/delete; private quizzes only visible to the owner"
+    },
+    {
+      "milestone": "M6 Server", "labels": ["area:server"],
+      "title": "Deck endpoints",
+      "body": "Same set of endpoints and rules as quizzes, under `/decks`."
+    },
+    {
+      "milestone": "M6 Server", "labels": ["area:server"],
+      "title": "Public catalog search and paging",
+      "body": "**Done when**\n- [ ] `GET /quizzes?q=&tag=&sort=&page=` and the same for `/decks`\n- [ ] Returns summaries only (no full document), public items only\n- [ ] Full-text search, tag filter, sort by newest / most downloaded\n- [ ] Download count incremented on `GET /{id}`"
+    },
+    {
+      "milestone": "M6 Server", "labels": ["area:server"],
+      "title": "Server protection: size limits and rate limiting",
+      "body": "**Done when**\n- [ ] Request body limit (1 MB) → 413\n- [ ] Rate limiting on auth endpoints → 429\n- [ ] CORS / error handler returns JSON errors without stack traces"
+    },
+    {
+      "milestone": "M6 Server", "labels": ["area:server"],
+      "title": "Server route tests against a throwaway Postgres",
+      "body": "**Done when**\n- [ ] Test harness starts/cleans a Postgres database (Docker) per test run\n- [ ] Tests: auth flow, ownership, validation errors, version conflicts, search\n- [ ] Runs in CI"
+    },
+    {
+      "milestone": "M6 Server", "labels": ["area:server", "documentation"],
+      "title": "docs: api.md REST reference",
+      "body": "**Done when**\n- [ ] `docs/api.md` documents every endpoint with request/response examples and error codes\n- [ ] Linked from README"
+    },
+    {
+      "milestone": "M7 Sync & catalog", "labels": ["area:app"],
+      "title": "API client with JWT refresh",
+      "body": "**Done when**\n- [ ] dio client with base URL from settings\n- [ ] Interceptor attaches the access token and refreshes on 401 once\n- [ ] Tokens stored with secure storage on Android and Windows\n- [ ] Typed errors (offline, validation, conflict, unauthorized)"
+    },
+    {
+      "milestone": "M7 Sync & catalog", "labels": ["area:app"],
+      "title": "Login and register screens",
+      "body": "**Done when**\n- [ ] Register (email, username, password) and login forms with validation\n- [ ] Logout in settings\n- [ ] The app stays fully usable when logged out"
+    },
+    {
+      "milestone": "M7 Sync & catalog", "labels": ["area:app"],
+      "title": "Publish quizzes and decks",
+      "body": "**Done when**\n- [ ] \"Publish\" on owned items: `POST` first time, `PUT` with `If-Match` afterwards\n- [ ] Visibility choice: public / unlisted / private\n- [ ] On 409 the user chooses \"keep mine (overwrite)\" or \"take server version\"\n- [ ] Stores `remoteId` / `remoteVersion` locally"
+    },
+    {
+      "milestone": "M7 Sync & catalog", "labels": ["area:app"],
+      "title": "Catalog browse and search screen",
+      "body": "**Done when**\n- [ ] Tabs for quizzes and decks, search box, tag filter, sort, infinite scroll\n- [ ] Details page with description, owner, question/card count, downloads\n- [ ] Friendly offline state"
+    },
+    {
+      "milestone": "M7 Sync & catalog", "labels": ["area:app"],
+      "title": "Download content and show available updates",
+      "body": "**Done when**\n- [ ] \"Download\" stores the document with `origin = downloaded`, `remoteId`, `remoteVersion`, owner name\n- [ ] Library shows \"Update available\" when the server version is newer; updating keeps attempts and review progress"
+    },
+    {
+      "milestone": "M7 Sync & catalog", "labels": ["area:app"],
+      "title": "Read-only downloaded content and \"Make a copy\"",
+      "body": "**Done when**\n- [ ] Downloaded items not owned by the user open read-only\n- [ ] \"Make a copy\" creates a local item with a new id that can be edited and published"
+    },
+    {
+      "milestone": "M8 Polish & release", "labels": ["area:app"],
+      "title": "Responsive desktop layout",
+      "body": "**Done when**\n- [ ] Two-pane layouts on wide screens (e.g. library + details, editor + preview)\n- [ ] Keyboard shortcuts documented in a help dialog\n- [ ] Sensible minimum window size on Windows"
+    },
+    {
+      "milestone": "M8 Polish & release", "labels": ["area:app"],
+      "title": "Theming and dark mode",
+      "body": "**Done when**\n- [ ] Light / dark / system theme setting\n- [ ] Charts and code-colored states readable in both themes"
+    },
+    {
+      "milestone": "M8 Polish & release", "labels": ["area:app", "accessibility"],
+      "title": "Accessibility pass",
+      "body": "**Done when**\n- [ ] Semantics labels on custom widgets, focus order works with keyboard\n- [ ] Text scaling up to 200% without overflow\n- [ ] Contrast checked; correct/incorrect not shown by color alone"
+    },
+    {
+      "milestone": "M8 Polish & release", "labels": ["area:app"],
+      "title": "Integration tests: create → play → stats",
+      "body": "**Done when**\n- [ ] Integration test creates a quiz, plays it, and checks results and stats\n- [ ] Integration test for a flashcard study session\n- [ ] Runs on Windows in CI"
+    },
+    {
+      "milestone": "M8 Polish & release", "labels": ["area:infra"],
+      "title": "Android and Windows release builds",
+      "body": "**Done when**\n- [ ] App id, name StudyBetter and icons set for both platforms\n- [ ] Signed Android APK/AAB (signing via CI secrets)\n- [ ] Windows release build (zip or MSIX)\n- [ ] CI builds artifacts on `main` and attaches them to GitHub releases"
+    }
+  ]
+}
