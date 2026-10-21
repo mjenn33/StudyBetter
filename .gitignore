@@ -1,0 +1,17 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+build/
+coverage/
+*.iml
+.idea/
+.vscode/
+
+# Generated code (built in CI with build_runner)
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Local environment
+.env
+*.log
