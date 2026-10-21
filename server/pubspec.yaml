@@ -1,0 +1,10 @@
+name: study_better_server
+description: StudyBetter REST API for publishing and downloading quizzes and decks.
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  quiz_core: any

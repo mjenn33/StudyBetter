@@ -1,0 +1,7 @@
+name: quiz_core
+description: Shared StudyBetter models, validation, scoring and spaced repetition.
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
