@@ -2,9 +2,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quiz_core/quiz_core.dart';
 
 import '../database/database_provider.dart';
+import 'attempt_repository.dart';
 import 'deck_repository.dart';
 import 'library_repository.dart';
 import 'quiz_repository.dart';
+import 'review_repository.dart';
+
+final attemptRepositoryProvider = Provider<AttemptRepository>(
+  (ref) => AttemptRepository(ref.watch(appDatabaseProvider)),
+);
+
+final reviewRepositoryProvider = Provider<ReviewRepository>(
+  (ref) => ReviewRepository(ref.watch(appDatabaseProvider)),
+);
 
 final quizRepositoryProvider = Provider<QuizRepository>(
   (ref) => QuizRepository(ref.watch(appDatabaseProvider)),
