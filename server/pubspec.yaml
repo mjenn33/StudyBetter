@@ -10,6 +10,7 @@ dependencies:
   quiz_core: any
   shelf: ^1.4.3
   shelf_router: ^1.1.5
+  postgres: ^3.5.9
 
 dev_dependencies:
   test: ^1.31.1

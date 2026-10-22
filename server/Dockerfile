@@ -19,8 +19,10 @@ RUN cd packages/quiz_core && dart run build_runner build -d
 RUN mkdir -p /out && dart compile exe server/bin/server.dart -o /out/server
 
 FROM scratch
+WORKDIR /app
 COPY --from=build /runtime/ /
 COPY --from=build /out/server /app/bin/server
+COPY --from=build /src/server/migrations /app/migrations
 
 ENV PORT=8080
 EXPOSE 8080
