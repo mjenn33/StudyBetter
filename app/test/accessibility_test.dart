@@ -6,10 +6,104 @@ import 'package:study_better/app/preferences.dart';
 import 'package:study_better/app/router.dart';
 import 'package:study_better/app/theme.dart';
 import 'package:study_better/data/repositories/providers.dart';
+import 'package:study_better/data/repositories/quiz_repository.dart';
+import 'package:study_better/features/quizzes/quiz_routes.dart';
 import 'helpers.dart';
 
 void main() {
   for (final brightness in Brightness.values) {
+    for (final width in [320.0, 400.0]) {
+      testWidgets('quiz flow at 200% text, $width wide, ${brightness.name}', (
+        tester,
+      ) async {
+        final db = testDatabase();
+        addTearDown(db.close);
+        final quiz = testQuiz(questions: 2);
+        await QuizRepository(db).import(quiz);
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final container = await pumpApp(
+          tester,
+          db: db,
+          size: Size(width, 800),
+          overrides: [
+            themeModeProvider.overrideWith(
+              (ref) async => brightness == Brightness.dark
+                  ? ThemeMode.dark
+                  : ThemeMode.light,
+            ),
+          ],
+        );
+        final router = container.read(routerProvider);
+        Future<void> checkPage(String path) async {
+          expect(tester.takeException(), isNull, reason: path);
+          // Inspect scrolled content too, including lazily built list children.
+          final scrollable = find.byType(Scrollable).first;
+          for (var step = 0; step < 20; step++) {
+            final position = tester.state<ScrollableState>(scrollable).position;
+            if (position.pixels >= position.maxScrollExtent) break;
+            await tester.drag(scrollable, const Offset(0, -400));
+            await tester.pumpAndSettle();
+            expect(tester.takeException(), isNull, reason: path);
+          }
+        }
+
+        for (final path in [
+          QuizPaths.detail(quiz.id),
+          QuizPaths.edit(quiz.id),
+        ]) {
+          router.go(path);
+          await tester.pumpAndSettle();
+          await checkPage(path);
+        }
+        await tester.tap(find.text('Add question'));
+        await tester.pumpAndSettle();
+        await checkPage('Question editor');
+        await tester.tap(find.byType(CloseButton));
+        await tester.pumpAndSettle();
+        router.go(QuizPaths.play(quiz.id));
+        await tester.pumpAndSettle();
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'Player actions must fit.',
+        );
+        final next = find.widgetWithText(FilledButton, 'Next');
+        final previous = find.widgetWithText(TextButton, 'Previous');
+        expect(next.hitTestable(), findsOneWidget);
+        expect(
+          find.widgetWithText(TextButton, 'Skip').hitTestable(),
+          findsOneWidget,
+        );
+        await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
+        await tester.pumpAndSettle();
+        await tester.tap(next);
+        await tester.pumpAndSettle();
+        expect(previous.hitTestable(), findsOneWidget);
+        await tester.tap(previous);
+        await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
+        await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+        expect(find.text('Passed'), findsOneWidget);
+        await checkPage('Results');
+        final attempt = await db.select(db.attempts).getSingle();
+        for (final path in [
+          QuizPaths.review(quiz.id, attempt.id),
+          QuizPaths.stats(quiz.id),
+          '/stats',
+          '/settings',
+        ]) {
+          router.go(path);
+          await tester.pumpAndSettle();
+          await checkPage(path);
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+      });
+    }
     testWidgets('large text and keyboard focus in ${brightness.name}', (
       tester,
     ) async {

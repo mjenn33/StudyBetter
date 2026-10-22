@@ -18,7 +18,7 @@ which did not contain Git history.
 | #50 Read-only/copy | Permissions, deck viewer, editable copies with new IDs | Repository copy/permissions tests |
 | #51 Desktop | Quiz library/catalog list-detail panes, shortcuts/help, DPI-aware minimum size | App tests; native Windows check pending |
 | #52 Themes | Persistent light/dark/system setting | Both-theme contrast tests |
-| #53 Accessibility | Flashcard semantics, progress, long/scaled text, explicit result labels | 200% text/keyboard/contrast tests; native screen-reader check pending |
+| #53 Accessibility | Adaptive player controls and detail labels; flashcard semantics, progress, scaled text and explicit result labels | Quiz flow at 200% text on 320/400-pixel screens, both themes, keyboard/contrast tests; native screen-reader check pending |
 | #54 Integration | Create/play/results/stats and flashcard study scenarios, Windows CI | Scenarios pass locally; Windows runner pending |
 | #55 Releases | Icons, Android permission/signing, Windows ZIP, main artifacts, tagged release uploads | Workflows prepared; native/signed builds pending |
 
@@ -26,15 +26,15 @@ which did not contain Git history.
 
 - Shared package: 84 passing tests.
 - Server: 12 passing tests, including real disposable PostgreSQL integration.
-- App: 181 tests passed in the complete suite; additional publishing, conflict,
-  and ownership/download UI cases pass separately.
+- App: 190 tests pass in the complete suite, including publishing/conflict,
+  ownership/download and expanded 200% text-scaling regressions.
 - Shared-model and Drift code generation completed.
 - Static analysis and formatting pass.
 - Publishing/conflict and downloads for both owners and other users pass UI tests.
 
 ## Remaining external steps
 
-Git push approval was declined. No branch or pull request has been published.
+The branch has been pushed to GitHub. No pull request has been created.
 The user will merge the branch themselves; do not merge it into `main`.
 GitHub CI has not run for these changes. A browser preview is documented in [preview.md](preview.md).
 
