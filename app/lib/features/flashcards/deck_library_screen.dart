@@ -132,6 +132,14 @@ class DeckListTile extends ConsumerWidget {
         tooltip: 'Actions',
         onSelected: (action) => _handleAction(context, ref, action),
         itemBuilder: (context) => [
+          const PopupMenuItem(
+            value: _DeckAction.studyDue,
+            child: Text('Study due cards'),
+          ),
+          const PopupMenuItem(
+            value: _DeckAction.cram,
+            child: Text('Cram all cards'),
+          ),
           if (!entry.isReadOnly)
             const PopupMenuItem(value: _DeckAction.edit, child: Text('Edit')),
           const PopupMenuItem(
@@ -151,6 +159,10 @@ class DeckListTile extends ConsumerWidget {
   ) async {
     final deck = entry.document;
     switch (action) {
+      case _DeckAction.studyDue:
+        context.go(DeckPaths.study(deck.id));
+      case _DeckAction.cram:
+        context.go(DeckPaths.study(deck.id, cram: true));
       case _DeckAction.edit:
         context.go(DeckPaths.edit(deck.id));
       case _DeckAction.duplicate:
@@ -183,4 +195,4 @@ class DeckListTile extends ConsumerWidget {
   }
 }
 
-enum _DeckAction { edit, duplicate, delete }
+enum _DeckAction { studyDue, cram, edit, duplicate, delete }
