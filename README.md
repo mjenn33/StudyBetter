@@ -91,6 +91,8 @@ cd app && flutter test
 cd server && dart test
 ```
 
+See the [REST API reference](docs/api.md) for authentication, catalog queries, sharing and errors.
+
 ## Quiz file format
 Quizzes and decks are JSON documents with a `schemaVersion`. Example:
 ```json

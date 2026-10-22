@@ -160,6 +160,48 @@ abstract class LibraryRepository<T extends Table, D> {
     });
   }
 
+  /// Records publishing metadata without changing local content or study history.
+  Future<void> markPublished(String id, String remoteId, int version) async {
+    final row = await _row(id);
+    if (row == null) throw ItemNotFoundException(id);
+    if (!row.isOwnedByMe) throw ReadOnlyItemException(id);
+    await (db.update(table)..where((_) => _columns.id.equals(id))).write(
+      RawValuesInsertable({
+        'remote_id': Variable(remoteId),
+        'remote_version': Variable(version),
+      }),
+    );
+  }
+
+  /// Updates the document in place, preserving attempts and review tables.
+  Future<void> storeRemote(
+    D document, {
+    required String remoteId,
+    required int remoteVersion,
+    required String ownerName,
+    bool owned = false,
+    LibraryOrigin? origin,
+  }) {
+    return db.transaction(() async {
+      final existing = await _row(idOf(document));
+      if (existing != null && existing.remoteId != remoteId) {
+        throw StateError(
+          'A different local item already uses this id. Make a copy first.',
+        );
+      }
+      await _write(
+        document,
+        origin:
+            origin ?? (owned ? LibraryOrigin.local : LibraryOrigin.downloaded),
+        isOwnedByMe: owned,
+        remoteId: remoteId,
+        remoteVersion: remoteVersion,
+        ownerName: ownerName,
+        downloadedAt: _now(),
+      );
+    });
+  }
+
   /// Creates an editable local copy of item [id] (including read-only
   /// downloaded items) and returns it.
   Future<D> duplicate(String id) {

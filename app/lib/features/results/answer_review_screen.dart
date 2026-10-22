@@ -139,6 +139,7 @@ class _AnswerCard extends StatelessWidget {
                 Icon(
                   isCorrect ? Icons.check_circle : Icons.cancel,
                   color: isCorrect ? scheme.primary : scheme.error,
+                  semanticLabel: isCorrect ? 'Correct' : 'Incorrect',
                 ),
               ],
             ),
@@ -187,6 +188,7 @@ class _AnswerLine extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     label: '$label: $value',
     child: RichText(
+      textScaler: MediaQuery.textScalerOf(context),
       text: TextSpan(
         style: DefaultTextStyle.of(context).style,
         children: [

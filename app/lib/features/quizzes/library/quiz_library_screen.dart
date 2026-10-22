@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_core/quiz_core.dart';
+import '../../../data/database/app_database.dart' show LibraryOrigin;
 
 import '../../../data/repositories/library_repository.dart';
 import '../../../data/repositories/providers.dart';
 import '../quiz_actions.dart';
 import '../quiz_readiness.dart';
 import '../quiz_routes.dart';
+import '../../catalog/sharing_actions.dart';
 import 'quiz_library_filter.dart';
+import '../detail/quiz_detail_screen.dart';
 
 /// The Quizzes tab: every quiz in the local library, with search and tag
 /// filter.
@@ -150,27 +153,61 @@ class _FilterBar extends ConsumerWidget {
   }
 }
 
-class _QuizList extends StatelessWidget {
+class _QuizList extends StatefulWidget {
   const _QuizList({required this.entries});
 
   final List<LibraryEntry<Quiz>> entries;
+  @override
+  State<_QuizList> createState() => _QuizListState();
+}
 
+class _QuizListState extends State<_QuizList> {
+  String? selected;
+  List<LibraryEntry<Quiz>> get entries => widget.entries;
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
       return const Center(child: Text('No quizzes match your search.'));
     }
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 88),
-      itemCount: entries.length,
-      itemBuilder: (context, i) => QuizListTile(entry: entries[i]),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 1050;
+        final selectedId = entries.any((entry) => entry.document.id == selected)
+            ? selected
+            : entries.first.document.id;
+        final list = ListView.builder(
+          padding: const EdgeInsets.only(bottom: 88),
+          itemCount: entries.length,
+          itemBuilder: (context, i) => QuizListTile(
+            entry: entries[i],
+            onSelect: wide
+                ? () => setState(() => selected = entries[i].document.id)
+                : null,
+          ),
+        );
+        return wide
+            ? Row(
+                children: [
+                  SizedBox(width: 380, child: list),
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: QuizDetailScreen(
+                      key: ValueKey(selectedId),
+                      quizId: selectedId!,
+                    ),
+                  ),
+                ],
+              )
+            : list;
+      },
     );
   }
 }
 
 /// One quiz in the library list.
 class QuizListTile extends ConsumerWidget {
-  const QuizListTile({super.key, required this.entry});
+  const QuizListTile({super.key, required this.entry, this.onSelect});
+  final VoidCallback? onSelect;
 
   final LibraryEntry<Quiz> entry;
 
@@ -190,6 +227,17 @@ class QuizListTile extends ConsumerWidget {
           Text(
             '$count ${count == 1 ? 'question' : 'questions'} · Updated $updated',
           ),
+          if (entry.origin == LibraryOrigin.downloaded &&
+              entry.remoteId != null &&
+              entry.remoteVersion != null)
+            ContentUpdateButton(
+              kind: 'quizzes',
+              id: quiz.id,
+              remoteId: entry.remoteId!,
+              version: entry.remoteVersion!,
+              ownerName: entry.ownerName ?? '',
+              owned: entry.isOwnedByMe,
+            ),
           if (problems.isNotEmpty)
             ErrorText('Draft · ${problemCount(problems.length)}'),
           if (quiz.tags.isNotEmpty)
@@ -210,7 +258,7 @@ class QuizListTile extends ConsumerWidget {
             ),
         ],
       ),
-      onTap: () => context.go(QuizPaths.detail(quiz.id)),
+      onTap: onSelect ?? () => context.go(QuizPaths.detail(quiz.id)),
       trailing: PopupMenuButton<_Action>(
         tooltip: 'Actions',
         onSelected: (action) => switch (action) {

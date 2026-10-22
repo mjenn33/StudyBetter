@@ -374,19 +374,21 @@ class _PlayerState extends ConsumerState<_Player> {
             bottomNavigationBar: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Row(
+                child: OverflowBar(
+                  alignment: MainAxisAlignment.spaceBetween,
+                  overflowAlignment: OverflowBarAlignment.end,
+                  spacing: 8,
+                  overflowSpacing: 8,
                   children: [
                     TextButton.icon(
                       onPressed: state.isFirst ? null : _controller.previous,
                       icon: const Icon(Icons.chevron_left),
                       label: const Text('Previous'),
                     ),
-                    const Spacer(),
                     TextButton(
                       onPressed: _controller.skip,
                       child: const Text('Skip'),
                     ),
-                    const SizedBox(width: 8),
                     FilledButton(
                       onPressed: _nextOrFinish,
                       child: Text(state.isLast ? 'Finish' : 'Next'),

@@ -31,6 +31,8 @@ class _FlashcardStudyScreenState extends ConsumerState<FlashcardStudyScreen> {
   var _index = 0;
   var _flipped = false;
   var _loading = true;
+  var _saving = false;
+  String? _error;
   final _grades = <Grade>[];
 
   @override
@@ -41,7 +43,11 @@ class _FlashcardStudyScreenState extends ConsumerState<FlashcardStudyScreen> {
 
   Future<void> _load() async {
     final deck = await ref.read(deckRepositoryProvider).getById(widget.deckId);
-    if (deck == null || !mounted) return;
+    if (!mounted) return;
+    if (deck == null) {
+      setState(() => _loading = false);
+      return;
+    }
     final states = await ref
         .read(reviewRepositoryProvider)
         .statesForDeck(widget.deckId);
@@ -71,46 +77,60 @@ class _FlashcardStudyScreenState extends ConsumerState<FlashcardStudyScreen> {
   }
 
   Future<void> _grade(Grade grade) async {
-    if (_index >= _cards.length) return;
-    final card = _cards[_index];
-    if (!widget.cram) {
-      final old = _states[card.id];
-      final scheduled = next(
-        ReviewState(
-          easeFactor: old?.easeFactor ?? 2.5,
-          intervalDays: old?.intervalDays ?? 0,
-          repetitions: old?.repetitions ?? 0,
-          dueAt: old?.dueAt,
-          lastReviewedAt: old?.lastReviewedAt,
-          lapses: old?.lapses ?? 0,
-        ),
-        grade,
-        DateTime.now(),
-      );
-      final state = CardReviewState(
-        deckId: widget.deckId,
-        cardId: card.id,
-        easeFactor: scheduled.easeFactor,
-        intervalDays: scheduled.intervalDays,
-        repetitions: scheduled.repetitions,
-        dueAt: scheduled.dueAt!,
-        lastReviewedAt: scheduled.lastReviewedAt,
-        lapses: scheduled.lapses,
-      );
-      await ref
-          .read(reviewRepositoryProvider)
-          .recordReview(
-            state: state,
-            grade: grade,
-            reviewedAt: scheduled.lastReviewedAt!,
-          );
-    }
-    if (mounted) {
-      setState(() {
-        _grades.add(grade);
-        _index += 1;
-        _flipped = false;
-      });
+    if (_index >= _cards.length || !_flipped || _saving) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final card = _cards[_index];
+      if (!widget.cram) {
+        final old = _states[card.id];
+        final scheduled = next(
+          ReviewState(
+            easeFactor: old?.easeFactor ?? 2.5,
+            intervalDays: old?.intervalDays ?? 0,
+            repetitions: old?.repetitions ?? 0,
+            dueAt: old?.dueAt,
+            lastReviewedAt: old?.lastReviewedAt,
+            lapses: old?.lapses ?? 0,
+          ),
+          grade,
+          DateTime.now(),
+        );
+        final state = CardReviewState(
+          deckId: widget.deckId,
+          cardId: card.id,
+          easeFactor: scheduled.easeFactor,
+          intervalDays: scheduled.intervalDays,
+          repetitions: scheduled.repetitions,
+          dueAt: scheduled.dueAt!,
+          lastReviewedAt: scheduled.lastReviewedAt,
+          lapses: scheduled.lapses,
+        );
+        await ref
+            .read(reviewRepositoryProvider)
+            .recordReview(
+              state: state,
+              grade: grade,
+              reviewedAt: scheduled.lastReviewedAt!,
+            );
+      }
+      if (mounted) {
+        setState(() {
+          _grades.add(grade);
+          _index += 1;
+          _flipped = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _error = 'Could not save this review. Please try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -155,20 +175,33 @@ class _FlashcardStudyScreenState extends ConsumerState<FlashcardStudyScreen> {
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                Text('${_index + 1} of ${_cards.length}'),
+                Semantics(
+                  liveRegion: true,
+                  child: Text('${_index + 1} of ${_cards.length}'),
+                ),
+                if (_error != null) Text(_error!, semanticsLabel: _error),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: InkWell(
-                    onTap: () => setState(() => _flipped = !_flipped),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Card(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Text(
-                            _flipped ? card.back : card.front,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                            textAlign: TextAlign.center,
+                  child: Semantics(
+                    label: _flipped ? 'Flashcard answer' : 'Flashcard question',
+                    button: true,
+                    hint: 'Activate to flip the card',
+                    child: InkWell(
+                      onTap: () => setState(() => _flipped = !_flipped),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Card(
+                        child: Center(
+                          child: SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32),
+                              child: Text(
+                                _flipped ? card.back : card.front,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -201,7 +234,7 @@ class _FlashcardStudyScreenState extends ConsumerState<FlashcardStudyScreen> {
   }
 
   Widget _gradeButton(String label, String key, Grade grade) => FilledButton(
-    onPressed: () => _grade(grade),
+    onPressed: _saving ? null : () => _grade(grade),
     child: Text('$label ($key)'),
   );
 }

@@ -8,6 +8,7 @@ import 'package:shelf_router/shelf_router.dart';
 import '../auth/auth_middleware.dart';
 import '../auth/auth_service.dart';
 import '../json_response.dart';
+import 'catalog.dart';
 
 class QuizRoutes {
   QuizRoutes(this.connection, this.auth);
@@ -15,24 +16,25 @@ class QuizRoutes {
   final Connection connection;
   final AuthService auth;
 
+  Future<Response> catalog(Request request) =>
+      catalogResponse(connection, 'quizzes', request);
+
   Future<Response> get(Request request) async {
     final id = request.params['id']!;
+    final userId = authenticatedUserId(request, auth);
     final rows = await connection.execute(
-      Sql.named(
-        'SELECT owner_id, visibility, document::text FROM quizzes WHERE id = @id',
-      ),
-      parameters: {'id': id},
+      Sql.named('''
+      UPDATE quizzes SET download_count = download_count + 1
+      WHERE id = @id AND (visibility <> 'private' OR owner_id = CAST(@user AS uuid))
+      RETURNING document::text, version
+    '''),
+      parameters: {'id': id, 'user': userId},
     );
     if (rows.isEmpty) return Response.notFound('Quiz not found');
-
-    final row = rows.first;
-    final ownerId = row[0] as String;
-    final visibility = row[1] as String;
-    final userId = authenticatedUserId(request, auth);
-    if (visibility == 'private' && userId != ownerId) {
-      return Response.notFound('Quiz not found');
-    }
-    return jsonResponse(jsonDecode(row[2] as String));
+    return jsonResponse(
+      jsonDecode(rows.first[0] as String),
+      headers: {'etag': '${rows.first[1]}'},
+    );
   }
 
   Future<Response> create(Request request) async {
@@ -129,7 +131,7 @@ class QuizRoutes {
   Future<Response> mine(Request request) async {
     final rows = await connection.execute(
       Sql.named('''
-        SELECT id, title, description, tags, language, visibility, version,
+        SELECT id, title, description, tags, language, visibility::text, version,
                item_count, download_count, created_at, updated_at
         FROM quizzes WHERE owner_id = @owner ORDER BY updated_at DESC
       '''),
