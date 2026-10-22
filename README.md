@@ -115,7 +115,7 @@ Quizzes and decks are JSON documents with a `schemaVersion`. Example:
   ]
 }
 ```
-Full reference in [docs/PLAN.md](docs/PLAN.md#4-data-format-json-schemaversion-1).
+Full reference: [docs/data-format.md](docs/data-format.md).
 
 ## Roadmap
 M0 Foundation → M1 Core models & storage → M2 Quiz authoring → M3 Quiz taking →

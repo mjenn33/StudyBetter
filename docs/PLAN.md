@@ -128,6 +128,9 @@ The same JSON document is used for **file export/import**, **upload** and
 **download**. Every document carries `schemaVersion` so the format can evolve with
 migrations in `quiz_core`.
 
+> The field-by-field reference, validation rules and versioning policy live in
+> [data-format.md](data-format.md); this section is the original design sketch.
+
 ### Quiz
 ```json
 {
