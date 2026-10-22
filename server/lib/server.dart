@@ -2,7 +2,11 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
 import 'config.dart';
+import 'auth/auth_middleware.dart';
+import 'auth/auth_service.dart';
+import 'db/database.dart';
 import 'routes/health.dart';
+import 'routes/auth.dart';
 
 /// Base path of every API route.
 const apiBasePath = '/api/v1';
@@ -10,8 +14,25 @@ const apiBasePath = '/api/v1';
 /// Builds the request handler for the whole API.
 ///
 /// Pass [enableLogging] `false` in tests to keep their output quiet.
-Handler buildHandler(Config config, {bool enableLogging = true}) {
-  final api = Router()..get('/health', health);
+Handler buildHandler(
+  Config config, {
+  Database? database,
+  bool enableLogging = true,
+}) {
+  if (database == null) {
+    final api = Router()..get('/health', health);
+    return const Pipeline().addHandler(
+      (Router()..mount('$apiBasePath/', api.call)).call,
+    );
+  }
+  final auth = AuthService(database.connection, config);
+  final routes = AuthRoutes(database.connection, auth);
+  final api = Router()
+    ..get('/health', health)
+    ..post('/auth/register', routes.register)
+    ..post('/auth/login', routes.login)
+    ..post('/auth/refresh', routes.refresh)
+    ..get('/me', requireAuth(auth)(routes.me));
   final root = Router()..mount('$apiBasePath/', api.call);
 
   var pipeline = const Pipeline();
