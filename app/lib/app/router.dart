@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/flashcards/deck_library_screen.dart';
+import '../features/flashcards/deck_routes.dart';
 import '../features/quizzes/library/quiz_library_screen.dart';
 import '../features/quizzes/quiz_routes.dart';
 import '../features/stats/global_statistics_screen.dart';
@@ -40,6 +42,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 /// The root page of a section; sections not built yet show a placeholder.
 Widget _sectionPage(AppDestination destination) => switch (destination.path) {
   QuizPaths.library => const QuizLibraryScreen(),
+  DeckPaths.library => const DeckLibraryScreen(),
   '/stats' => const GlobalStatisticsScreen(),
   _ => PlaceholderPage(title: destination.label),
 };
@@ -47,5 +50,6 @@ Widget _sectionPage(AppDestination destination) => switch (destination.path) {
 List<RouteBase> _sectionRoutes(AppDestination destination) =>
     switch (destination.path) {
       QuizPaths.library => quizRoutes,
+      DeckPaths.library => deckRoutes,
       _ => const [],
     };

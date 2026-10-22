@@ -38,3 +38,8 @@ final quizzesProvider = StreamProvider<List<LibraryEntry<Quiz>>>(
 final decksProvider = StreamProvider<List<LibraryEntry<FlashcardDeck>>>(
   (ref) => ref.watch(deckRepositoryProvider).watchAll(),
 );
+
+/// The number of reviewed flashcards currently due in a deck.
+final deckDueCountProvider = FutureProvider.autoDispose.family<int, String>(
+  (ref, deckId) => ref.read(reviewRepositoryProvider).dueCount(deckId),
+);

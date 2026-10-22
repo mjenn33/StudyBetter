@@ -231,6 +231,24 @@ void main() {
       expect(await reviews.reviewLog(), isEmpty);
     });
 
+    test(
+      'dueCount only includes cards due at or before the requested time',
+      () async {
+        await reviews.writeState(state('overdue', days: -1));
+        await reviews.writeState(state('today', days: 0));
+        await reviews.writeState(state('later', days: 1));
+
+        expect(await reviews.dueCount('deck-1', now: t0), 2);
+        expect(
+          await reviews.dueCount(
+            'deck-1',
+            now: t0.add(const Duration(days: 1)),
+          ),
+          3,
+        );
+      },
+    );
+
     test('reviewLog filters by deck and time', () async {
       await db
           .into(db.decks)
