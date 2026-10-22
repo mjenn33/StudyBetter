@@ -46,9 +46,8 @@ jobs:
         working-directory: packages/quiz_core
         run: dart test
 
-      - name: Test server
-        working-directory: server
-        run: dart test
+      - name: Test server against disposable PostgreSQL
+        run: scripts/test/server.sh
 
       - name: Test app
         working-directory: app
@@ -76,3 +75,21 @@ jobs:
       - name: Stop
         if: always()
         run: docker compose down -v
+
+  windows-integration:
+    name: Windows study flows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+          cache: true
+      - run: dart pub get
+      - run: dart run build_runner build
+        working-directory: packages/quiz_core
+      - run: dart run build_runner build
+        working-directory: app
+      - run: flutter test integration_test -d windows
+        working-directory: app
