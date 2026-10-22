@@ -148,7 +148,19 @@ class _PlayerState extends ConsumerState<_Player> {
     }
 
     _ticker?.cancel();
-    final score = _controller.finish().score;
+    final messenger = ScaffoldMessenger.of(context);
+    AttemptScore score;
+    try {
+      final (_, attempt) = await _controller.finishAndSave();
+      score = attempt.score;
+    } catch (e) {
+      // The attempt is over either way; show the score even if saving failed.
+      score = ref.read(playerProvider(widget.quizId)).requireValue.score;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not save this attempt: $e')),
+      );
+    }
+    if (!mounted) return;
     setState(() => _finished = true);
     // TODO(#25): show the results screen instead.
     await showDialog<void>(
