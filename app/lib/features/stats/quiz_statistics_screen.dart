@@ -25,8 +25,7 @@ class QuizStatisticsScreen extends ConsumerWidget {
     final statistics = ref.watch(quizStatisticsProvider(quizId));
     final entry = quiz.asData?.value;
     final title = entry?.document.title ?? 'Quiz statistics';
-    final passingScore =
-        entry?.document.settings.passingScorePercent ?? 70;
+    final passingScore = entry?.document.settings.passingScorePercent ?? 70;
 
     return Scaffold(
       appBar: AppBar(title: Text('$title statistics')),
