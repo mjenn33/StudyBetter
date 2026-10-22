@@ -6,6 +6,7 @@ import 'package:quiz_core/quiz_core.dart';
 import '../../data/repositories/library_repository.dart';
 import '../../data/repositories/providers.dart';
 import 'deck_routes.dart';
+import 'deck_actions.dart';
 
 /// The library of locally stored flashcard decks.
 class DeckLibraryScreen extends ConsumerWidget {
@@ -17,7 +18,16 @@ class DeckLibraryScreen extends ConsumerWidget {
     final hasDecks = decks.value?.isNotEmpty ?? false;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Flashcards')),
+      appBar: AppBar(
+        title: const Text('Flashcards'),
+        actions: [
+          IconButton(
+            tooltip: 'Import',
+            icon: const Icon(Icons.file_open_outlined),
+            onPressed: () => DeckActions.import(context, ref),
+          ),
+        ],
+      ),
       floatingActionButton: hasDecks
           ? FloatingActionButton.extended(
               onPressed: () => context.go(DeckPaths.create),
@@ -146,6 +156,7 @@ class DeckListTile extends ConsumerWidget {
             value: _DeckAction.duplicate,
             child: Text('Duplicate'),
           ),
+          const PopupMenuItem(value: _DeckAction.export, child: Text('Export')),
           const PopupMenuItem(value: _DeckAction.delete, child: Text('Delete')),
         ],
       ),
@@ -170,6 +181,8 @@ class DeckListTile extends ConsumerWidget {
         if (context.mounted) {
           context.go(DeckPaths.edit(copy.id));
         }
+      case _DeckAction.export:
+        await DeckActions.export(context, ref, deck);
       case _DeckAction.delete:
         final delete = await showDialog<bool>(
           context: context,
@@ -195,4 +208,4 @@ class DeckListTile extends ConsumerWidget {
   }
 }
 
-enum _DeckAction { studyDue, cram, edit, duplicate, delete }
+enum _DeckAction { studyDue, cram, edit, duplicate, export, delete }
