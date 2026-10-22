@@ -1,0 +1,11 @@
+# Only the server and quiz_core are needed to build the server image.
+.git/
+.github/
+app/
+docs/
+scripts/
+**/.dart_tool/
+**/build/
+**/*.g.dart
+**/*.freezed.dart
+.env
