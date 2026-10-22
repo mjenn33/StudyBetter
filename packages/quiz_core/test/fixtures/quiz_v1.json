@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "kind": "quiz",
+  "id": "8f6c2a7e-1c1b-4c55-9a0e-4b7e6b0d2f11",
+  "title": "World Capitals",
+  "description": "Capitals of the world, easy level",
+  "language": "en",
+  "tags": ["geography", "capitals"],
+  "version": 3,
+  "createdAt": "2026-10-21T10:00:00Z",
+  "updatedAt": "2026-10-21T12:30:00Z",
+  "settings": {
+    "shuffleQuestions": true,
+    "shuffleOptions": true,
+    "timeLimitSeconds": null,
+    "passingScorePercent": 70
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "prompt": "What is the capital of Australia?",
+      "type": "single",
+      "options": [
+        { "id": "a", "text": "Sydney" },
+        { "id": "b", "text": "Canberra" },
+        { "id": "c", "text": "Melbourne" }
+      ],
+      "correctOptionIds": ["b"],
+      "explanation": "Canberra was purpose-built as the capital in 1913.",
+      "points": 1
+    },
+    {
+      "id": "q2",
+      "prompt": "Which of these cities are national capitals?",
+      "type": "multiple",
+      "options": [
+        { "id": "a", "text": "Ottawa" },
+        { "id": "b", "text": "Toronto" },
+        { "id": "c", "text": "Nairobi" },
+        { "id": "d", "text": "Lagos" }
+      ],
+      "correctOptionIds": ["a", "c"],
+      "explanation": null,
+      "points": 2
+    }
+  ]
+}
