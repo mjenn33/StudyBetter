@@ -70,3 +70,12 @@ Quiz testQuiz({
     ],
   );
 }
+
+/// Scrolls [finder] into view, then types [text] into it. `enterText` alone
+/// taps the field to focus it, which misses fields scrolled off screen and
+/// then types into whatever was focused before.
+Future<void> enter(WidgetTester tester, Finder finder, String text) async {
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.enterText(finder, text);
+}

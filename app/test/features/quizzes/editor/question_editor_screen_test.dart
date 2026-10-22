@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quiz_core/quiz_core.dart';
 import 'package:study_better/features/quizzes/editor/question_editor_screen.dart';
 
+import '../../../helpers.dart';
+
 /// Opens the editor on [question] from a host page and records the result.
 class _Harness {
   Question? result;
@@ -52,21 +54,23 @@ void main() {
     final h = _Harness();
     await h.open(tester, blank);
 
-    await tester.enterText(
+    await enter(
+      tester,
       find.widgetWithText(TextField, 'Question'),
       'Capital of Australia?',
     );
-    await tester.enterText(optionField(1), 'Sydney');
-    await tester.enterText(optionField(2), 'Canberra');
+    await enter(tester, optionField(1), 'Sydney');
+    await enter(tester, optionField(2), 'Canberra');
     await tester.tap(find.text('Add option'));
     await tester.pumpAndSettle();
-    await tester.enterText(optionField(3), 'Melbourne');
+    await enter(tester, optionField(3), 'Melbourne');
     await tester.tap(find.byType(Radio<String>).at(1));
-    await tester.enterText(
+    await enter(
+      tester,
       find.widgetWithText(TextField, 'Explanation (optional)'),
       'Purpose-built capital.',
     );
-    await tester.enterText(find.widgetWithText(TextField, 'Points'), '2');
+    await enter(tester, find.widgetWithText(TextField, 'Points'), '2');
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Done'));
@@ -197,7 +201,7 @@ void main() {
     final h = _Harness();
     await h.open(tester, blank);
 
-    await tester.enterText(find.widgetWithText(TextField, 'Question'), 'Q');
+    await enter(tester, find.widgetWithText(TextField, 'Question'), 'Q');
     await tester.pumpAndSettle();
     await tester.tap(find.byType(CloseButton));
     await tester.pumpAndSettle();

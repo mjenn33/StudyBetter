@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:quiz_core/quiz_core.dart';
 
 import '../library/quiz_library_filter.dart';
+import '../../../data/repositories/library_repository.dart';
 import '../quiz_actions.dart';
+import '../quiz_readiness.dart';
 import '../quiz_routes.dart';
 
 /// Overview of one quiz with its main actions. Stats are added in #28.
@@ -18,87 +20,7 @@ class QuizDetailScreen extends ConsumerWidget {
     final entry = ref.watch(quizEntryProvider(quizId));
 
     return switch (entry) {
-      AsyncData(value: final entry?) => Scaffold(
-        appBar: AppBar(
-          title: Text(entry.document.title),
-          actions: [
-            PopupMenuButton<String>(
-              tooltip: 'More',
-              onSelected: (value) async {
-                if (value == 'duplicate') {
-                  await QuizActions.duplicate(context, ref, entry.document);
-                } else if (value == 'delete') {
-                  final router = GoRouter.of(context);
-                  await QuizActions.delete(context, ref, entry.document);
-                  router.go(QuizPaths.library);
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
-              ],
-            ),
-          ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (entry.document.description.isNotEmpty) ...[
-              Text(entry.document.description),
-              const SizedBox(height: 16),
-            ],
-            _Facts(
-              questions: entry.document.questions.length,
-              settings: entry.document.settings,
-            ),
-            if (entry.document.tags.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final tag in entry.document.tags) Chip(label: Text(tag)),
-                ],
-              ),
-            ],
-            if (entry.isReadOnly) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Downloaded from ${entry.ownerName ?? 'the catalog'}. '
-                'Make a copy to edit it.',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-            const SizedBox(height: 24),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                FilledButton.icon(
-                  onPressed: entry.document.questions.isEmpty
-                      ? null
-                      : () => context.go(QuizPaths.play(quizId)),
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Play'),
-                ),
-                if (entry.isReadOnly)
-                  OutlinedButton.icon(
-                    onPressed: () =>
-                        QuizActions.duplicate(context, ref, entry.document),
-                    icon: const Icon(Icons.copy),
-                    label: const Text('Make a copy'),
-                  )
-                else
-                  OutlinedButton.icon(
-                    onPressed: () => context.go(QuizPaths.edit(quizId)),
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Edit'),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      AsyncData(value: final entry?) => _buildDetail(context, ref, entry),
       AsyncData() => Scaffold(
         appBar: AppBar(),
         body: const Center(child: Text('This quiz no longer exists.')),
@@ -109,6 +31,104 @@ class QuizDetailScreen extends ConsumerWidget {
       ),
       _ => const Scaffold(body: Center(child: CircularProgressIndicator())),
     };
+  }
+
+  Widget _buildDetail(
+    BuildContext context,
+    WidgetRef ref,
+    LibraryEntry<Quiz> entry,
+  ) {
+    final problems = entry.document.problems;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(entry.document.title),
+        actions: [
+          PopupMenuButton<String>(
+            tooltip: 'More',
+            onSelected: (value) async {
+              if (value == 'duplicate') {
+                await QuizActions.duplicate(context, ref, entry.document);
+              } else if (value == 'delete') {
+                final router = GoRouter.of(context);
+                await QuizActions.delete(context, ref, entry.document);
+                router.go(QuizPaths.library);
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
+              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            ],
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (entry.document.description.isNotEmpty) ...[
+            Text(entry.document.description),
+            const SizedBox(height: 16),
+          ],
+          _Facts(
+            questions: entry.document.questions.length,
+            settings: entry.document.settings,
+          ),
+          if (entry.document.tags.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final tag in entry.document.tags) Chip(label: Text(tag)),
+              ],
+            ),
+          ],
+          if (entry.isReadOnly) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Downloaded from ${entry.ownerName ?? 'the catalog'}. '
+              'Make a copy to edit it.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+          if (problems.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            QuizProblemsCard(
+              problems: problems,
+              message:
+                  'This quiz is a draft with ${problemCount(problems.length)}. '
+                  'Fix them in the editor to play or export it.',
+            ),
+          ],
+          const SizedBox(height: 24),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              FilledButton.icon(
+                onPressed: problems.isNotEmpty
+                    ? null
+                    : () => context.go(QuizPaths.play(quizId)),
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Play'),
+              ),
+              if (entry.isReadOnly)
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      QuizActions.duplicate(context, ref, entry.document),
+                  icon: const Icon(Icons.copy),
+                  label: const Text('Make a copy'),
+                )
+              else
+                OutlinedButton.icon(
+                  onPressed: () => context.go(QuizPaths.edit(quizId)),
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Edit'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

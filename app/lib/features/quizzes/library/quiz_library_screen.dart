@@ -6,6 +6,7 @@ import 'package:quiz_core/quiz_core.dart';
 import '../../../data/repositories/library_repository.dart';
 import '../../../data/repositories/providers.dart';
 import '../quiz_actions.dart';
+import '../quiz_readiness.dart';
 import '../quiz_routes.dart';
 import 'quiz_library_filter.dart';
 
@@ -178,6 +179,7 @@ class QuizListTile extends ConsumerWidget {
     final quiz = entry.document;
     final localizations = MaterialLocalizations.of(context);
     final count = quiz.questions.length;
+    final problems = quiz.problems;
     final updated = localizations.formatMediumDate(quiz.updatedAt.toLocal());
 
     return ListTile(
@@ -188,6 +190,8 @@ class QuizListTile extends ConsumerWidget {
           Text(
             '$count ${count == 1 ? 'question' : 'questions'} · Updated $updated',
           ),
+          if (problems.isNotEmpty)
+            ErrorText('Draft · ${problemCount(problems.length)}'),
           if (quiz.tags.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -210,6 +214,14 @@ class QuizListTile extends ConsumerWidget {
       trailing: PopupMenuButton<_Action>(
         tooltip: 'Actions',
         onSelected: (action) => switch (action) {
+          _Action.play when problems.isNotEmpty =>
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(blockedMessage('play', problems.length)),
+                ),
+              ),
           _Action.play => context.go(QuizPaths.play(quiz.id)),
           _Action.edit => context.go(QuizPaths.edit(quiz.id)),
           _Action.duplicate => QuizActions.duplicate(context, ref, quiz),

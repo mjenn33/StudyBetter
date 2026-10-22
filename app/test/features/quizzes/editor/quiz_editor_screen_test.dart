@@ -30,8 +30,8 @@ void main() {
     expect(find.text('New quiz'), findsOneWidget);
     expect(tester.widget<FilledButton>(saveButton()).onPressed, isNull);
 
-    await tester.enterText(field('Title'), 'World Capitals');
-    await tester.enterText(field('Add tag'), 'geo');
+    await enter(tester, field('Title'), 'World Capitals');
+    await enter(tester, field('Add tag'), 'geo');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.tap(find.text('Shuffle questions'));
     await tester.pumpAndSettle();
@@ -56,7 +56,7 @@ void main() {
     await tester.tap(find.widgetWithText(OutlinedButton, 'Edit'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(field('Title'), 'Changed');
+    await enter(tester, field('Title'), 'Changed');
     await tester.pumpAndSettle();
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
@@ -109,7 +109,8 @@ void main() {
 
     await tester.tap(find.text('Add question'));
     await tester.pumpAndSettle();
-    await tester.enterText(
+    await enter(
+      tester,
       find.widgetWithText(TextField, 'Question'),
       'Capital of France?',
     );
@@ -122,7 +123,8 @@ void main() {
     await tester.tap(find.text('Question 0'));
     await tester.pumpAndSettle();
     expect(find.text('Edit question'), findsOneWidget);
-    await tester.enterText(
+    await enter(
+      tester,
       find.widgetWithText(TextField, 'Question'),
       'Capital of Peru?',
     );
@@ -151,12 +153,12 @@ void main() {
     await pumpApp(tester, db: db, size: const Size(800, 1400));
     await tester.tap(find.text('Create quiz'));
     await tester.pumpAndSettle();
-    await tester.enterText(field('Title'), 'Timed');
+    await enter(tester, field('Title'), 'Timed');
 
     await tester.tap(find.text('Time limit'));
     await tester.pumpAndSettle();
     expect(find.widgetWithText(TextFormField, 'Minutes'), findsOneWidget);
-    await tester.enterText(find.widgetWithText(TextFormField, 'Minutes'), '5');
+    await enter(tester, find.widgetWithText(TextFormField, 'Minutes'), '5');
     await tester.pumpAndSettle();
     expect(find.text('70%'), findsWidgets);
 
@@ -177,7 +179,7 @@ void main() {
     await tester.tap(find.text('Edit'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(field('Title'), 'After');
+    await enter(tester, field('Title'), 'After');
     await tester.pumpAndSettle();
     await tester.tap(saveButton());
     await tester.pumpAndSettle();

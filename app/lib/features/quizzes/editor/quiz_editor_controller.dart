@@ -4,11 +4,12 @@ import 'package:uuid/uuid.dart';
 
 import '../../../data/repositories/library_repository.dart';
 import '../../../data/repositories/providers.dart';
+import '../issue_index.dart';
 import 'editor_ids.dart';
 
 /// The quiz being edited: the last saved version and the working draft.
 class QuizEditorState {
-  const QuizEditorState({
+  QuizEditorState({
     required this.saved,
     required this.draft,
     required this.isNew,
@@ -23,8 +24,16 @@ class QuizEditorState {
 
   bool get isDirty => draft != saved;
 
-  /// A quiz needs a title before it can be saved.
+  /// A quiz needs a title before it can be saved. Other problems don't block
+  /// saving: an invalid quiz is kept as a draft that can't be played yet.
   bool get canSave => isDirty && draft.title.trim().isNotEmpty;
+
+  /// Validation problems of the draft, by path.
+  late final IssueIndex issues = IssueIndex(validateQuiz(draft));
+
+  /// Problems are shown once there is something to judge: for an existing
+  /// quiz right away, for a new one after the first change.
+  bool get showIssues => !isNew || isDirty;
 
   QuizEditorState copyWith({Quiz? saved, Quiz? draft, bool? isNew}) =>
       QuizEditorState(
