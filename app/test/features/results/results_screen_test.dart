@@ -149,7 +149,32 @@ void main() {
       await tester.tap(find.text('Review answers'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Review answers — coming soon'), findsOneWidget);
+      expect(find.text('Play review'), findsOneWidget);
+      expect(find.text('1. One?'), findsOneWidget);
+      expect(find.text('2. Many?'), findsOneWidget);
+      expect(find.text('3. Three?'), findsOneWidget);
+      Finder answerLine(String text) => find.byWidgetPredicate(
+        (widget) => widget is RichText && widget.text.toPlainText() == text,
+      );
+      expect(answerLine('Your answer: B'), findsOneWidget);
+      expect(answerLine('Correct answer: B'), findsOneWidget);
+      expect(answerLine('Your answer: Skipped'), findsOneWidget);
+      expect(answerLine('Correct answer: A, C'), findsOneWidget);
+    });
+
+    testWidgets('review filters to incorrect and skipped answers', (
+      tester,
+    ) async {
+      await openResults(tester, _attempt(quizId: quiz.id));
+      await tester.tap(find.text('Review answers'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Incorrect only'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1. One?'), findsNothing);
+      expect(find.text('1. Many?'), findsOneWidget);
+      expect(find.text('2. Three?'), findsOneWidget);
     });
 
     testWidgets('retry starts a new attempt', (tester) async {
