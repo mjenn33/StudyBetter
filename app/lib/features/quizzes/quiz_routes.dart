@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 
-import '../../app/placeholder_page.dart';
 import '../play/player_screen.dart';
+import '../results/answer_review_screen.dart';
 import '../results/results_screen.dart';
 import 'detail/quiz_detail_screen.dart';
 import 'editor/quiz_editor_screen.dart';
@@ -44,11 +44,12 @@ final quizRoutes = <RouteBase>[
           attemptId: state.pathParameters['attemptId']!,
         ),
         routes: [
-          // TODO(#26): answer review screen.
           GoRoute(
             path: 'review',
-            builder: (context, state) =>
-                const PlaceholderPage(title: 'Review answers'),
+            builder: (context, state) => AnswerReviewScreen(
+              quizId: state.pathParameters['id']!,
+              attemptId: state.pathParameters['attemptId']!,
+            ),
           ),
         ],
       ),
