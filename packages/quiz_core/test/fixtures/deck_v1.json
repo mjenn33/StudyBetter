@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "kind": "flashcardDeck",
+  "id": "c3d1b7a2-5e4f-4a3b-9c8d-1e2f3a4b5c6d",
+  "title": "Spanish verbs",
+  "description": "",
+  "language": "es",
+  "tags": ["spanish"],
+  "version": 1,
+  "createdAt": "2026-10-21T10:00:00Z",
+  "updatedAt": "2026-10-21T10:00:00Z",
+  "cards": [
+    { "id": "k1", "front": "tener", "back": "to have", "hint": null },
+    { "id": "k2", "front": "hacer", "back": "to do / to make", "hint": "irregular" }
+  ]
+}
