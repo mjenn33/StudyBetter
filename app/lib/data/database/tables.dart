@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'converters.dart';
+import 'library_item_row.dart';
 
 /// Where a library item came from.
 enum LibraryOrigin {
@@ -49,9 +50,11 @@ mixin LibraryItemColumns on Table {
 }
 
 @TableIndex(name: 'quizzes_updated_at', columns: {#updatedAt})
+@UseRowClass(LibraryItemRow)
 class Quizzes extends Table with LibraryItemColumns {}
 
 @TableIndex(name: 'decks_updated_at', columns: {#updatedAt})
+@UseRowClass(LibraryItemRow)
 class Decks extends Table with LibraryItemColumns {}
 
 /// One finished play-through of a quiz.
