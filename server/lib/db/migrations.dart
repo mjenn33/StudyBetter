@@ -35,7 +35,11 @@ class MigrationRunner {
       final name = file.uri.pathSegments.last;
       if (applied.contains(name)) continue;
       await connection.runTx((session) async {
-        await session.execute(await file.readAsString());
+        for (final statement in (await file.readAsString()).split(';')) {
+          if (statement.trim().isNotEmpty) {
+            await session.execute(statement);
+          }
+        }
         await session.execute(
           Sql.named('INSERT INTO schema_migrations (name) VALUES (@name)'),
           parameters: {'name': name},
