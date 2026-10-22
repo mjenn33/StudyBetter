@@ -33,11 +33,20 @@ class AppDatabase extends _$AppDatabase {
   /// support directory (`%APPDATA%\com.studybetter\StudyBetter` on Windows,
   /// app-private storage on Android). drift_flutter's default is the
   /// documents directory, which on Windows is the user's Documents folder.
+  ///
+  /// On the web it runs sqlite3 compiled to WebAssembly, storing the database
+  /// in the browser (OPFS or IndexedDB); `sqlite3.wasm` and `drift_worker.js`
+  /// are served from `web/` and must match the resolved `sqlite3` and `drift`
+  /// package versions.
   factory AppDatabase.open() => AppDatabase(
     driftDatabase(
       name: 'study_better',
       native: const DriftNativeOptions(
         databaseDirectory: getApplicationSupportDirectory,
+      ),
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.js'),
       ),
     ),
   );

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// A file the user picked, decoded as UTF-8.
@@ -22,8 +23,9 @@ abstract interface class QuizFiles {
   Future<bool> saveJson(String fileName, String contents);
 }
 
-/// [QuizFiles] using the native dialogs: the Windows open/save dialogs and the
-/// Android document picker / "save to" sheet.
+/// [QuizFiles] using the native dialogs: the Windows open/save dialogs, the
+/// Android document picker / "save to" sheet, and the browser's file input and
+/// download on the web.
 class PlatformQuizFiles implements QuizFiles {
   const PlatformQuizFiles();
 
@@ -52,7 +54,8 @@ class PlatformQuizFiles implements QuizFiles {
       type: FileType.custom,
       allowedExtensions: const ['json'],
     );
-    return uri != null;
+    // On the web the file is downloaded directly and no Uri comes back.
+    return kIsWeb || uri != null;
   }
 }
 
