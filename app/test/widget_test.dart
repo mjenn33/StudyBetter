@@ -40,7 +40,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('$label — coming soon'), findsOneWidget);
+      expect(
+        find.text(label == 'Stats' ? 'Statistics' : '$label — coming soon'),
+        findsOneWidget,
+      );
     }
   });
 }
