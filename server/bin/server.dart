@@ -16,7 +16,7 @@ Future<void> main() async {
   final database = await Database.open(config);
 
   final server = await shelf_io.serve(
-    buildHandler(config),
+    buildHandler(config, database: database),
     InternetAddress.anyIPv4,
     config.port,
   );
