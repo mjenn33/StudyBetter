@@ -11,6 +11,7 @@ import '../features/settings/settings_screen.dart';
 import 'app_shell.dart';
 import 'destinations.dart';
 import 'placeholder_page.dart';
+import '../features/catalog/catalog_screen.dart';
 
 /// The app router: one navigation branch per [appDestinations] entry,
 /// wrapped in [AppShell].
@@ -44,6 +45,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 Widget _sectionPage(AppDestination destination) => switch (destination.path) {
   QuizPaths.library => const QuizLibraryScreen(),
   DeckPaths.library => const DeckLibraryScreen(),
+  '/catalog' => const CatalogScreen(),
   '/stats' => const GlobalStatisticsScreen(),
   '/settings' => const SettingsScreen(),
   _ => PlaceholderPage(title: destination.label),

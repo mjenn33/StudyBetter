@@ -45,7 +45,7 @@ void main() {
           'Flashcards' => 'No flashcard decks yet',
           'Stats' => 'Statistics',
           'Settings' => 'New cards per day',
-          _ => '$label — coming soon',
+          _ => 'Search catalog',
         }),
         findsOneWidget,
       );

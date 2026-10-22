@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_core/quiz_core.dart';
+import '../../data/database/app_database.dart' show LibraryOrigin;
 
 import '../../data/repositories/library_repository.dart';
 import '../../data/repositories/providers.dart';
 import 'deck_routes.dart';
 import 'deck_actions.dart';
+import '../catalog/sharing_actions.dart';
 
 /// The library of locally stored flashcard decks.
 class DeckLibraryScreen extends ConsumerWidget {
@@ -110,6 +112,17 @@ class DeckListTile extends ConsumerWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (entry.origin == LibraryOrigin.downloaded &&
+              entry.remoteId != null &&
+              entry.remoteVersion != null)
+            ContentUpdateButton(
+              kind: 'decks',
+              id: deck.id,
+              remoteId: entry.remoteId!,
+              version: entry.remoteVersion!,
+              ownerName: entry.ownerName ?? '',
+              owned: entry.isOwnedByMe,
+            ),
           Text('$cardCount ${cardCount == 1 ? 'card' : 'cards'} · $dueText'),
           if (deck.description.trim().isNotEmpty)
             Text(
@@ -136,12 +149,42 @@ class DeckListTile extends ConsumerWidget {
         ],
       ),
       onTap: entry.isReadOnly
-          ? null
+          ? () => showDialog<void>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(deck.title),
+                content: SizedBox(
+                  width: 500,
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      Text(deck.description),
+                      for (final card in deck.cards)
+                        ListTile(
+                          title: Text(card.front),
+                          subtitle: Text(card.back),
+                        ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
+            )
           : () => context.go(DeckPaths.edit(deck.id)),
       trailing: PopupMenuButton<_DeckAction>(
         tooltip: 'Actions',
         onSelected: (action) => _handleAction(context, ref, action),
         itemBuilder: (context) => [
+          if (!entry.isReadOnly)
+            const PopupMenuItem(
+              value: _DeckAction.publish,
+              child: Text('Publish'),
+            ),
           const PopupMenuItem(
             value: _DeckAction.studyDue,
             child: Text('Study due cards'),
@@ -152,9 +195,9 @@ class DeckListTile extends ConsumerWidget {
           ),
           if (!entry.isReadOnly)
             const PopupMenuItem(value: _DeckAction.edit, child: Text('Edit')),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: _DeckAction.duplicate,
-            child: Text('Duplicate'),
+            child: Text(entry.isReadOnly ? 'Make a copy' : 'Duplicate'),
           ),
           const PopupMenuItem(value: _DeckAction.export, child: Text('Export')),
           const PopupMenuItem(value: _DeckAction.delete, child: Text('Delete')),
@@ -170,6 +213,8 @@ class DeckListTile extends ConsumerWidget {
   ) async {
     final deck = entry.document;
     switch (action) {
+      case _DeckAction.publish:
+        await publishContent(context, ref, kind: 'decks', id: deck.id);
       case _DeckAction.studyDue:
         context.go(DeckPaths.study(deck.id));
       case _DeckAction.cram:
@@ -208,4 +253,4 @@ class DeckListTile extends ConsumerWidget {
   }
 }
 
-enum _DeckAction { studyDue, cram, edit, duplicate, export, delete }
+enum _DeckAction { publish, studyDue, cram, edit, duplicate, export, delete }

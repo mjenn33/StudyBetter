@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_core/quiz_core.dart';
+import '../../../data/database/app_database.dart' show LibraryOrigin;
 
 import '../library/quiz_library_filter.dart';
 import '../../../data/repositories/library_repository.dart';
 import '../quiz_actions.dart';
+import '../../catalog/sharing_actions.dart';
 import '../quiz_readiness.dart';
 import '../quiz_routes.dart';
 
@@ -107,6 +109,24 @@ class QuizDetailScreen extends ConsumerWidget {
             spacing: 12,
             runSpacing: 12,
             children: [
+              if (!entry.isReadOnly)
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      publishContent(context, ref, kind: 'quizzes', id: quizId),
+                  icon: const Icon(Icons.cloud_upload),
+                  label: const Text('Publish'),
+                ),
+              if (entry.origin == LibraryOrigin.downloaded &&
+                  entry.remoteId != null &&
+                  entry.remoteVersion != null)
+                ContentUpdateButton(
+                  kind: 'quizzes',
+                  id: quizId,
+                  remoteId: entry.remoteId!,
+                  version: entry.remoteVersion!,
+                  ownerName: entry.ownerName ?? '',
+                  owned: entry.isOwnedByMe,
+                ),
               FilledButton.icon(
                 onPressed: problems.isNotEmpty
                     ? null

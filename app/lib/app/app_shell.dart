@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'destinations.dart';
@@ -21,8 +22,45 @@ class AppShell extends StatelessWidget {
     );
   }
 
+  void _help(BuildContext context) => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Keyboard shortcuts'),
+      content: const SingleChildScrollView(
+        child: Text(
+          'Ctrl+1–5: switch sections\nF1: show this help\nTab / Shift+Tab: move focus\nEnter / Space: activate focused control\nEscape: close dialogs',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+    ),
+  );
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => CallbackShortcuts(
+    bindings: {
+      const SingleActivator(LogicalKeyboardKey.f1): () => _help(context),
+      for (var i = 0; i < appDestinations.length; i++)
+        SingleActivator(
+          [
+            LogicalKeyboardKey.digit1,
+            LogicalKeyboardKey.digit2,
+            LogicalKeyboardKey.digit3,
+            LogicalKeyboardKey.digit4,
+            LogicalKeyboardKey.digit5,
+          ][i],
+          control: true,
+        ): () =>
+            _onDestinationSelected(i),
+    },
+    child: Focus(autofocus: true, child: _layout(context)),
+  );
+
+  Widget _layout(BuildContext context) {
     final isWide = MediaQuery.sizeOf(context).width >= wideLayoutBreakpoint;
     final selectedIndex = navigationShell.currentIndex;
 
@@ -31,6 +69,11 @@ class AppShell extends StatelessWidget {
         body: Row(
           children: [
             NavigationRail(
+              trailing: IconButton(
+                tooltip: 'Keyboard shortcuts (F1)',
+                onPressed: () => _help(context),
+                icon: const Icon(Icons.help_outline),
+              ),
               selectedIndex: selectedIndex,
               onDestinationSelected: _onDestinationSelected,
               labelType: NavigationRailLabelType.all,
