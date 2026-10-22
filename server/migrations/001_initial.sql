@@ -36,7 +36,7 @@ CREATE TABLE quizzes (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX quizzes_search_idx ON quizzes USING gin(to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || array_to_string(tags, ' ')));
+CREATE INDEX quizzes_search_idx ON quizzes USING gin(to_tsvector('simple'::regconfig, coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(tags::text, '')));
 CREATE INDEX quizzes_owner_idx ON quizzes(owner_id);
 
 CREATE TABLE decks (
@@ -54,5 +54,5 @@ CREATE TABLE decks (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX decks_search_idx ON decks USING gin(to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || array_to_string(tags, ' ')));
+CREATE INDEX decks_search_idx ON decks USING gin(to_tsvector('simple'::regconfig, coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(tags::text, '')));
 CREATE INDEX decks_owner_idx ON decks(owner_id);
