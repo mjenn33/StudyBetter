@@ -65,6 +65,22 @@ class ReviewRepository {
     return {for (final r in rows) r.cardId: _toState(r)};
   }
 
+  /// Number of reviewed cards in [deckId] that are due at [now].
+  ///
+  /// Cards without a state are new rather than due; the review player can
+  /// surface those separately without making the library count misleading.
+  Future<int> dueCount(String deckId, {DateTime? now}) async {
+    final dueAt = (now ?? DateTime.now()).toUtc();
+    final rows =
+        await (_db.select(_db.cardReviews)..where(
+              (r) =>
+                  r.deckId.equals(deckId) &
+                  r.dueAt.isSmallerOrEqualValue(dueAt),
+            ))
+            .get();
+    return rows.length;
+  }
+
   /// Stores [state] without logging a review (e.g. to reset a card).
   Future<void> writeState(CardReviewState state) =>
       _db.into(_db.cardReviews).insertOnConflictUpdate(_toCompanion(state));
