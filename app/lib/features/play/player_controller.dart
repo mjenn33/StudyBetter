@@ -171,10 +171,43 @@ final playerProvider = AsyncNotifierProvider.autoDispose
       retry: (_, _) => null,
     );
 
+/// Identifies the quiz and question subset for a weakest-question practice run.
+class PracticeLaunch {
+  const PracticeLaunch({required this.quizId, required this.questionIds});
+
+  final String quizId;
+  final Set<String> questionIds;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PracticeLaunch &&
+      quizId == other.quizId &&
+      _sameIds(questionIds, other.questionIds);
+
+  @override
+  int get hashCode => Object.hash(quizId, Object.hashAllUnordered(questionIds));
+}
+
+bool _sameIds(Set<String> first, Set<String> second) =>
+    first.length == second.length && first.containsAll(second);
+
+/// Player state for a run containing only the quiz's weakest questions.
+final practicePlayerProvider = AsyncNotifierProvider.autoDispose
+    .family<PracticePlayerController, PlayerState, PracticeLaunch>(
+      PracticePlayerController.new,
+      retry: (_, _) => null,
+    );
+
 class PlayerController extends AsyncNotifier<PlayerState> {
   PlayerController(this.quizId);
 
   final String quizId;
+
+  /// A subset used by practice mode; `null` plays the entire quiz.
+  Set<String>? get questionIds => null;
+
+  /// Whether saved attempts belong outside the main score trend.
+  bool get isPractice => false;
 
   @override
   Future<PlayerState> build() async {
@@ -186,7 +219,10 @@ class PlayerController extends AsyncNotifier<PlayerState> {
 
     final random = ref.read(playerRandomProvider);
     final settings = quiz.settings;
-    final questions = [...quiz.questions];
+    final questions = [
+      for (final question in quiz.questions)
+        if (questionIds == null || questionIds!.contains(question.id)) question,
+    ];
     if (settings.shuffleQuestions) questions.shuffle(random);
     final now = _now();
     return PlayerState(
@@ -291,7 +327,7 @@ class PlayerController extends AsyncNotifier<PlayerState> {
     final id = const Uuid().v4();
     await ref
         .read(attemptRepositoryProvider)
-        .save(attemptRecordFrom(attempt, id: id));
+        .save(attemptRecordFrom(attempt, id: id, isPractice: isPractice));
     return (id, attempt);
   }
 
@@ -329,6 +365,18 @@ class PlayerController extends AsyncNotifier<PlayerState> {
       },
     );
   }
+}
+
+class PracticePlayerController extends PlayerController {
+  PracticePlayerController(this.launch) : super(launch.quizId);
+
+  final PracticeLaunch launch;
+
+  @override
+  Set<String> get questionIds => launch.questionIds;
+
+  @override
+  bool get isPractice => true;
 }
 
 int _msBetween(DateTime from, DateTime to) =>

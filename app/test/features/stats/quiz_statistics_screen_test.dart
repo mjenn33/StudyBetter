@@ -98,6 +98,9 @@ void main() {
     expect(find.text('Last'), findsOneWidget);
     expect(find.text('Score trend'), findsOneWidget);
     expect(find.byType(LineChart), findsOneWidget);
+    expect(find.text('Weakest questions'), findsOneWidget);
+    expect(find.text('Many?'), findsOneWidget);
+    expect(find.text('Practice weakest questions'), findsOneWidget);
     expect(find.text('Attempt history'), findsOneWidget);
     expect(find.text('2026-10-21'), findsOneWidget);
 

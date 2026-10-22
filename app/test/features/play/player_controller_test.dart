@@ -120,6 +120,25 @@ void main() {
     expect(shuffled, isTrue);
   });
 
+  test('practice mode plays only its selected questions', () async {
+    final quiz = playQuiz();
+    await container.read(quizRepositoryProvider).import(quiz);
+    final provider = practicePlayerProvider(
+      PracticeLaunch(quizId: quiz.id, questionIds: const {'q2', 'q3'}),
+    );
+    container.listen(provider, (_, _) {});
+    await container.read(provider.future);
+
+    expect(
+      container
+          .read(provider)
+          .requireValue
+          .questions
+          .map((question) => question.id),
+      ['q2', 'q3'],
+    );
+  });
+
   test('single-answer selection replaces the previous one', () async {
     final (player, state) = await start(playQuiz());
 
