@@ -6,7 +6,9 @@ import 'package:study_better/features/stats/global_statistics_screen.dart';
 import '../../helpers.dart';
 
 void main() {
-  testWidgets('shows global totals and thirty-day activity chart', (tester) async {
+  testWidgets('shows global totals and thirty-day activity chart', (
+    tester,
+  ) async {
     final db = testDatabase();
     final firstDay = DateTime.utc(2026, 10, 1);
     await pumpApp(
