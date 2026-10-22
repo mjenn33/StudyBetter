@@ -31,8 +31,12 @@ jobs:
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed .
 
-      - name: Generate code
+      - name: Generate code (quiz_core)
         working-directory: packages/quiz_core
+        run: dart run build_runner build -d
+
+      - name: Generate code (app)
+        working-directory: app
         run: dart run build_runner build -d
 
       - name: Analyze
