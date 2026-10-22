@@ -81,6 +81,27 @@ class ReviewRepository {
     return rows.length;
   }
 
+  /// Due reviewed-card count across every deck.
+  Future<int> totalDueCount({DateTime? now}) async {
+    final dueAt = (now ?? DateTime.now()).toUtc();
+    return (await (_db.select(
+      _db.cardReviews,
+    )..where((row) => row.dueAt.isSmallerOrEqualValue(dueAt))).get()).length;
+  }
+
+  /// Consecutive UTC calendar days ending today that contain a review.
+  Future<int> streak({DateTime? now}) async {
+    final logs = await reviewLog();
+    final days = {for (final log in logs) _day(log.reviewedAt)};
+    var day = _day(now ?? DateTime.now());
+    var count = 0;
+    while (days.contains(day)) {
+      count += 1;
+      day = day.subtract(const Duration(days: 1));
+    }
+    return count;
+  }
+
   /// Stores [state] without logging a review (e.g. to reset a card).
   Future<void> writeState(CardReviewState state) =>
       _db.into(_db.cardReviews).insertOnConflictUpdate(_toCompanion(state));
@@ -159,4 +180,9 @@ class ReviewRepository {
         lastReviewedAt: Value(s.lastReviewedAt?.toUtc()),
         lapses: Value(s.lapses),
       );
+}
+
+DateTime _day(DateTime value) {
+  final utc = value.toUtc();
+  return DateTime.utc(utc.year, utc.month, utc.day);
 }
