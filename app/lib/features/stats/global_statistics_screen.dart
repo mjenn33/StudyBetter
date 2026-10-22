@@ -9,6 +9,14 @@ final globalStatisticsProvider = FutureProvider.autoDispose<GlobalStatistics>(
   (ref) => ref.read(statisticsRepositoryProvider).global(),
 );
 
+final flashcardMetricsProvider =
+    FutureProvider.autoDispose<({int due, int streak})>(
+      (ref) async => (
+        due: await ref.read(reviewRepositoryProvider).totalDueCount(),
+        streak: await ref.read(reviewRepositoryProvider).streak(),
+      ),
+    );
+
 /// The app-wide quiz metrics dashboard.
 class GlobalStatisticsScreen extends ConsumerWidget {
   const GlobalStatisticsScreen({super.key});
@@ -18,7 +26,7 @@ class GlobalStatisticsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Statistics')),
       body: switch (ref.watch(globalStatisticsProvider)) {
-        AsyncData(:final value) => _Dashboard(statistics: value),
+        AsyncData(:final value) => _Dashboard(statistics: value, ref: ref),
         AsyncError(:final error) => Center(
           child: Text('Could not load statistics: $error'),
         ),
@@ -29,9 +37,10 @@ class GlobalStatisticsScreen extends ConsumerWidget {
 }
 
 class _Dashboard extends StatelessWidget {
-  const _Dashboard({required this.statistics});
+  const _Dashboard({required this.statistics, required this.ref});
 
   final GlobalStatistics statistics;
+  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -73,7 +82,12 @@ class _Dashboard extends StatelessWidget {
       const SizedBox(height: 28),
       Text('Flashcards', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 4),
-      const Text('Flashcard review metrics will appear here as you study.'),
+      switch (ref.watch(flashcardMetricsProvider)) {
+        AsyncData(:final value) => Text(
+          '${value.due} cards due · ${value.streak}-day review streak',
+        ),
+        _ => const Text('Loading flashcard review metrics…'),
+      },
     ],
   );
 }

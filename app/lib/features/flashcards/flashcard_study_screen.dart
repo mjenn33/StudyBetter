@@ -45,13 +45,21 @@ class _FlashcardStudyScreenState extends ConsumerState<FlashcardStudyScreen> {
     final states = await ref
         .read(reviewRepositoryProvider)
         .statesForDeck(widget.deckId);
+    final newCardLimit = await ref
+        .read(settingsRepositoryProvider)
+        .newCardsPerDay();
     final now = DateTime.now().toUtc();
     final cards = widget.cram
         ? deck.document.cards
-        : deck.document.cards.where((card) {
-            final state = states[card.id];
-            return state == null || !state.dueAt.isAfter(now);
-          }).toList();
+        : [
+            ...deck.document.cards.where((card) {
+              final state = states[card.id];
+              return state != null && !state.dueAt.isAfter(now);
+            }),
+            ...deck.document.cards
+                .where((card) => !states.containsKey(card.id))
+                .take(newCardLimit),
+          ];
     if (mounted) {
       setState(() {
         _deck = deck.document;

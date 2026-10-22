@@ -7,6 +7,7 @@ import '../features/flashcards/deck_routes.dart';
 import '../features/quizzes/library/quiz_library_screen.dart';
 import '../features/quizzes/quiz_routes.dart';
 import '../features/stats/global_statistics_screen.dart';
+import '../features/settings/settings_screen.dart';
 import 'app_shell.dart';
 import 'destinations.dart';
 import 'placeholder_page.dart';
@@ -44,6 +45,7 @@ Widget _sectionPage(AppDestination destination) => switch (destination.path) {
   QuizPaths.library => const QuizLibraryScreen(),
   DeckPaths.library => const DeckLibraryScreen(),
   '/stats' => const GlobalStatisticsScreen(),
+  '/settings' => const SettingsScreen(),
   _ => PlaceholderPage(title: destination.label),
 };
 
