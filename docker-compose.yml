@@ -1,0 +1,37 @@
+# Local development stack. Settings come from `.env` (see `.env.example`).
+#   docker compose up -d db      # PostgreSQL only (run the server with `dart run`)
+#   docker compose up -d --build # PostgreSQL + server image
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-studybetter}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studybetter}
+      POSTGRES_DB: ${POSTGRES_DB:-studybetter}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgres://${POSTGRES_USER:-studybetter}:${POSTGRES_PASSWORD:-studybetter}@db:5432/${POSTGRES_DB:-studybetter}
+      JWT_SECRET: ${JWT_SECRET:-}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

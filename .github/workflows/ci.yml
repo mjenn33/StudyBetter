@@ -49,3 +49,26 @@ jobs:
       - name: Test app
         working-directory: app
         run: flutter test
+
+  docker:
+    name: Docker Compose stack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build and start db + server
+        run: docker compose up -d --build --wait
+
+      - name: Check health endpoint
+        run: curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors http://localhost:8080/api/v1/health
+
+      - name: Check database login
+        run: docker compose exec -T db psql -U studybetter -d studybetter -tAc 'select 1'
+
+      - name: Show logs
+        if: always()
+        run: docker compose logs
+
+      - name: Stop
+        if: always()
+        run: docker compose down -v

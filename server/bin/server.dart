@@ -20,8 +20,15 @@ Future<void> main() async {
   );
   print('Serving at http://${server.address.host}:${server.port}$apiBasePath');
 
-  ProcessSignal.sigint.watch().first.then((_) async {
-    await server.close();
-    exit(0);
-  });
+  // Ctrl+C locally; SIGTERM from `docker stop` (not supported on Windows).
+  final signals = [
+    ProcessSignal.sigint.watch(),
+    if (!Platform.isWindows) ProcessSignal.sigterm.watch(),
+  ];
+  for (final signal in signals) {
+    signal.first.then((_) async {
+      await server.close();
+      exit(0);
+    });
+  }
 }

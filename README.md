@@ -54,12 +54,35 @@ flutter run -d windows
 For Android, start an emulator or plug in a device and run `flutter run`.
 
 ### Run the server
+Settings come from environment variables. For Docker Compose, copy the example
+env file and adjust it (`.env` is git-ignored):
+```bash
+cp .env.example .env
+```
+
+| Variable | Default | Used by |
+|---|---|---|
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `studybetter` | `db` service, server `DATABASE_URL` |
+| `DB_PORT` | `5432` | host port for PostgreSQL |
+| `SERVER_PORT` | `8080` | host port for the server container |
+| `JWT_SECRET` | random per start | signing tokens — set it to keep tokens valid across restarts |
+
+Start PostgreSQL and run the server from source (hot restart, debugger):
 ```bash
 docker compose up -d db
 cd server
 dart run bin/server.dart
 ```
+Outside Docker the server reads `PORT`, `DATABASE_URL` and `JWT_SECRET`; the
+defaults match the Compose database on `localhost:5432`.
+
+Or run everything in Docker (AOT-compiled server image):
+```bash
+docker compose up -d --build
+```
+
 The API is served at `http://localhost:8080/api/v1` (health check: `/api/v1/health`).
+Stop with `docker compose down` (add `-v` to also delete the database volume).
 
 ### Tests
 ```bash
