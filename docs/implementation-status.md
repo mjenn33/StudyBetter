@@ -1,6 +1,6 @@
 # Issues #41–#55 implementation status
 
-Changes are on `feat/41-55-studybetter-completion`, based on `main` at `688a785`.
+Changes are on `feat/41-55`, based on `main` at `688a785`.
 The checkout is the `repository/` subdirectory of the supplied source folder,
 which did not contain Git history.
 
@@ -32,8 +32,9 @@ which did not contain Git history.
 
 ## Remaining external steps
 
-Git push approval was declined. No branch or pull request has been published,
-`main` has not been merged, and GitHub CI has not run for these changes.
+Git push approval was declined. No branch or pull request has been published.
+The user will merge the branch themselves; do not merge it into `main`.
+GitHub CI has not run for these changes. A working app preview is requested.
 
 Configure the four Android signing secrets in [releases.md](releases.md), publish
 the branch once authorized, and run the Windows/native release jobs before
