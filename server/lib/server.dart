@@ -7,6 +7,7 @@ import 'auth/auth_service.dart';
 import 'db/database.dart';
 import 'routes/health.dart';
 import 'routes/auth.dart';
+import 'routes/quizzes.dart';
 
 /// Base path of every API route.
 const apiBasePath = '/api/v1';
@@ -27,12 +28,18 @@ Handler buildHandler(
   }
   final auth = AuthService(database.connection, config);
   final routes = AuthRoutes(database.connection, auth);
+  final quizzes = QuizRoutes(database.connection, auth);
   final api = Router()
     ..get('/health', health)
     ..post('/auth/register', routes.register)
     ..post('/auth/login', routes.login)
     ..post('/auth/refresh', routes.refresh)
-    ..get('/me', requireAuth(auth)(routes.me));
+    ..get('/me', requireAuth(auth)(routes.me))
+    ..get('/quizzes/<id>', quizzes.get)
+    ..post('/quizzes', requireAuth(auth)(quizzes.create))
+    ..put('/quizzes/<id>', requireAuth(auth)(quizzes.update))
+    ..delete('/quizzes/<id>', requireAuth(auth)(quizzes.delete))
+    ..get('/me/quizzes', requireAuth(auth)(quizzes.mine));
   final root = Router()..mount('$apiBasePath/', api.call);
 
   var pipeline = const Pipeline();
