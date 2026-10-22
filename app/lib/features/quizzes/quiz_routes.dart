@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../play/player_screen.dart';
 import '../results/answer_review_screen.dart';
 import '../results/results_screen.dart';
+import '../stats/quiz_statistics_screen.dart';
 import 'detail/quiz_detail_screen.dart';
 import 'editor/quiz_editor_screen.dart';
 
@@ -12,6 +13,7 @@ abstract final class QuizPaths {
   static const create = '/quizzes/new';
   static String detail(String id) => '/quizzes/$id';
   static String edit(String id) => '/quizzes/$id/edit';
+  static String stats(String id) => '/quizzes/$id/stats';
   static String play(String id) => '/quizzes/$id/play';
   static String results(String id, String attemptId) =>
       '/quizzes/$id/attempts/$attemptId';
@@ -31,6 +33,11 @@ final quizRoutes = <RouteBase>[
         path: 'edit',
         builder: (context, state) =>
             QuizEditorScreen(quizId: state.pathParameters['id']),
+      ),
+      GoRoute(
+        path: 'stats',
+        builder: (context, state) =>
+            QuizStatisticsScreen(quizId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: 'play',
