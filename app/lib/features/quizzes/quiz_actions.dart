@@ -17,15 +17,17 @@ abstract final class QuizActions {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     final copy = await ref.read(quizRepositoryProvider).duplicate(quiz.id);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('Created "${copy.title}"'),
-        action: SnackBarAction(
-          label: 'Open',
-          onPressed: () => router.go(QuizPaths.detail(copy.id)),
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Created "${copy.title}"'),
+          action: SnackBarAction(
+            label: 'Open',
+            onPressed: () => router.go(QuizPaths.detail(copy.id)),
+          ),
         ),
-      ),
-    );
+      );
   }
 
   /// Deletes [quiz] and shows a snack bar to undo it.
@@ -37,15 +39,17 @@ abstract final class QuizActions {
     final messenger = ScaffoldMessenger.of(context);
     final repository = ref.read(quizRepositoryProvider);
     await repository.delete(quiz.id);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('Deleted "${quiz.title}"'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () => repository.restore(quiz.id),
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Deleted "${quiz.title}"'),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () => repository.restore(quiz.id),
+          ),
         ),
-      ),
-    );
+      );
   }
 
   /// Placeholder until file import lands (#20).
