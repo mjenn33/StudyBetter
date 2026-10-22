@@ -179,7 +179,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('Play — coming soon'), findsNothing);
+      expect(find.textContaining('Question 1 of'), findsNothing);
     });
 
     testWidgets('the detail page lists problems and disables Play', (
@@ -208,7 +208,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Play'));
       await tester.pumpAndSettle();
-      expect(find.text('Play — coming soon'), findsOneWidget);
+      expect(find.textContaining('Question 1 of'), findsOneWidget);
     });
   });
 }
