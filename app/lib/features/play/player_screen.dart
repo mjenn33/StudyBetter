@@ -13,14 +13,30 @@ import 'player_controller.dart';
 
 /// Plays a quiz one question at a time.
 class PlayerScreen extends ConsumerWidget {
-  const PlayerScreen({super.key, required this.quizId});
+  const PlayerScreen({
+    super.key,
+    required this.quizId,
+    this.practiceQuestionIds,
+  });
 
   final String quizId;
+  final Set<String>? practiceQuestionIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return switch (ref.watch(playerProvider(quizId))) {
-      AsyncData(:final value) => _Player(quizId: quizId, state: value),
+    final state = practiceQuestionIds == null
+        ? ref.watch(playerProvider(quizId))
+        : ref.watch(
+            practicePlayerProvider(
+              PracticeLaunch(quizId: quizId, questionIds: practiceQuestionIds!),
+            ),
+          );
+    return switch (state) {
+      AsyncData(:final value) => _Player(
+        quizId: quizId,
+        state: value,
+        practiceQuestionIds: practiceQuestionIds,
+      ),
       AsyncError(:final error) => Scaffold(
         appBar: AppBar(),
         body: Center(
@@ -42,10 +58,15 @@ class PlayerScreen extends ConsumerWidget {
 }
 
 class _Player extends ConsumerStatefulWidget {
-  const _Player({required this.quizId, required this.state});
+  const _Player({
+    required this.quizId,
+    required this.state,
+    required this.practiceQuestionIds,
+  });
 
   final String quizId;
   final PlayerState state;
+  final Set<String>? practiceQuestionIds;
 
   @override
   ConsumerState<_Player> createState() => _PlayerState();
@@ -69,8 +90,16 @@ class _PlayerState extends ConsumerState<_Player> {
     onShow: () => _controller.resume(),
   );
 
-  PlayerController get _controller =>
-      ref.read(playerProvider(widget.quizId).notifier);
+  PlayerController get _controller => widget.practiceQuestionIds == null
+      ? ref.read(playerProvider(widget.quizId).notifier)
+      : ref.read(
+          practicePlayerProvider(
+            PracticeLaunch(
+              quizId: widget.quizId,
+              questionIds: widget.practiceQuestionIds!,
+            ),
+          ).notifier,
+        );
 
   PlayerState get _state => widget.state;
 
@@ -95,7 +124,18 @@ class _PlayerState extends ConsumerState<_Player> {
 
   void _tick() {
     if (!mounted || _finished) return;
-    final state = ref.read(playerProvider(widget.quizId)).value;
+    final state = widget.practiceQuestionIds == null
+        ? ref.read(playerProvider(widget.quizId)).value
+        : ref
+              .read(
+                practicePlayerProvider(
+                  PracticeLaunch(
+                    quizId: widget.quizId,
+                    questionIds: widget.practiceQuestionIds!,
+                  ),
+                ),
+              )
+              .value;
     if (state != null && state.isTimeUp(ref.read(playerClockProvider).now())) {
       _onTimeUp();
     } else {
@@ -182,7 +222,19 @@ class _PlayerState extends ConsumerState<_Player> {
 
   /// Fallback when the attempt couldn't be saved: the score in a dialog.
   Future<void> _showScoreDialog({required bool timeUp}) async {
-    final score = ref.read(playerProvider(widget.quizId)).requireValue.score;
+    final score =
+        (widget.practiceQuestionIds == null
+                ? ref.read(playerProvider(widget.quizId))
+                : ref.read(
+                    practicePlayerProvider(
+                      PracticeLaunch(
+                        quizId: widget.quizId,
+                        questionIds: widget.practiceQuestionIds!,
+                      ),
+                    ),
+                  ))
+            .requireValue
+            .score;
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(

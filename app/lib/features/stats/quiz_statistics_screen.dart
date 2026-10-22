@@ -7,6 +7,7 @@ import '../../data/repositories/providers.dart';
 import '../../data/repositories/statistics_repository.dart';
 import '../quizzes/library/quiz_library_filter.dart';
 import '../quizzes/quiz_routes.dart';
+import '../play/player_screen.dart';
 
 final quizStatisticsProvider = FutureProvider.autoDispose
     .family<QuizStatistics, String>(
@@ -34,6 +35,10 @@ class QuizStatisticsScreen extends ConsumerWidget {
           quizId: quizId,
           statistics: value,
           passingScorePercent: passingScore,
+          questionPrompts: {
+            for (final question in entry?.document.questions ?? const [])
+              question.id: question.prompt,
+          },
         ),
         AsyncError(:final error) => Center(
           child: Text('Could not load statistics: $error'),
@@ -49,11 +54,13 @@ class _StatisticsBody extends StatelessWidget {
     required this.quizId,
     required this.statistics,
     required this.passingScorePercent,
+    required this.questionPrompts,
   });
 
   final String quizId;
   final QuizStatistics statistics;
   final int passingScorePercent;
+  final Map<String, String> questionPrompts;
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +110,31 @@ class _StatisticsBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 28),
+        if (statistics.questionAccuracy.isNotEmpty) ...[
+          Text(
+            'Weakest questions',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          for (final accuracy in statistics.questionAccuracy)
+            ListTile(
+              title: Text(
+                questionPrompts[accuracy.questionId] ??
+                    'Removed question (${accuracy.questionId})',
+              ),
+              subtitle: Text(
+                '${accuracy.correctCount} of ${accuracy.answerCount} correct',
+              ),
+              trailing: Text(_percent(accuracy.percent)),
+            ),
+          const SizedBox(height: 8),
+          FilledButton.icon(
+            onPressed: () => context.go(QuizPaths.practice(quizId)),
+            icon: const Icon(Icons.school_outlined),
+            label: const Text('Practice weakest questions'),
+          ),
+          const SizedBox(height: 28),
+        ],
         Text('Attempt history', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 8),
         for (final score in statistics.scores.reversed)
@@ -129,6 +161,41 @@ class _StatisticsBody extends StatelessWidget {
   static String _formatDate(DateTime value) {
     final date = value.toLocal();
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+}
+
+/// Starts a normal player session restricted to the five weakest current
+/// questions. The player records this as a practice attempt.
+class PracticeWeakestScreen extends ConsumerWidget {
+  const PracticeWeakestScreen({super.key, required this.quizId});
+
+  final String quizId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statistics = ref.watch(quizStatisticsProvider(quizId));
+    final entry = ref.watch(quizEntryProvider(quizId));
+    return switch ((statistics, entry)) {
+      (AsyncData(:final value), AsyncData(value: final quiz?)) => () {
+        final currentIds = {
+          for (final question in quiz.document.questions) question.id,
+        };
+        final ids = value.questionAccuracy
+            .where((accuracy) => currentIds.contains(accuracy.questionId))
+            .take(5)
+            .map((accuracy) => accuracy.questionId)
+            .toSet();
+        return ids.isEmpty
+            ? Scaffold(
+                appBar: AppBar(title: const Text('Practice weakest questions')),
+                body: const Center(
+                  child: Text('No current questions have practice data yet.'),
+                ),
+              )
+            : PlayerScreen(quizId: quizId, practiceQuestionIds: ids);
+      }(),
+      _ => const Scaffold(body: Center(child: CircularProgressIndicator())),
+    };
   }
 }
 

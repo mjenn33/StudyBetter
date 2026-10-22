@@ -118,6 +118,21 @@ void main() {
         ('q3', 0, false),
       ]);
     });
+
+    test('practice player saves an attempt marked as practice', () async {
+      final quiz = playQuiz();
+      await container.read(quizRepositoryProvider).import(quiz);
+      final provider = practicePlayerProvider(
+        PracticeLaunch(quizId: quiz.id, questionIds: const {'q2'}),
+      );
+      container.listen(provider, (_, _) {});
+      await container.read(provider.future);
+
+      final (id, _) = await container.read(provider.notifier).finishAndSave();
+      final saved = await container.read(attemptRepositoryProvider).getById(id);
+      expect(saved!.isPractice, isTrue);
+      expect(saved.answers.map((answer) => answer.questionId), ['q2']);
+    });
   });
 
   group('PlayerScreen', () {

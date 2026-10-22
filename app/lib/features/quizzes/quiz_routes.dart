@@ -14,6 +14,7 @@ abstract final class QuizPaths {
   static String detail(String id) => '/quizzes/$id';
   static String edit(String id) => '/quizzes/$id/edit';
   static String stats(String id) => '/quizzes/$id/stats';
+  static String practice(String id) => '/quizzes/$id/practice';
   static String play(String id) => '/quizzes/$id/play';
   static String results(String id, String attemptId) =>
       '/quizzes/$id/attempts/$attemptId';
@@ -38,6 +39,11 @@ final quizRoutes = <RouteBase>[
         path: 'stats',
         builder: (context, state) =>
             QuizStatisticsScreen(quizId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: 'practice',
+        builder: (context, state) =>
+            PracticeWeakestScreen(quizId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: 'play',
