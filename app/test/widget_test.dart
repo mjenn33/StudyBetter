@@ -41,7 +41,11 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(
-        find.text(label == 'Stats' ? 'Statistics' : '$label — coming soon'),
+        find.text(switch (label) {
+          'Flashcards' => 'No flashcard decks yet',
+          'Stats' => 'Statistics',
+          _ => '$label — coming soon',
+        }),
         findsOneWidget,
       );
     }
