@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/placeholder_page.dart';
 import 'detail/quiz_detail_screen.dart';
+import 'editor/quiz_editor_screen.dart';
 
 /// Paths of the quiz screens, under the Quizzes tab.
 abstract final class QuizPaths {
@@ -14,20 +15,16 @@ abstract final class QuizPaths {
 
 /// Routes nested under [QuizPaths.library].
 final quizRoutes = <RouteBase>[
-  // TODO(#17): quiz editor.
-  GoRoute(
-    path: 'new',
-    builder: (context, state) => const PlaceholderPage(title: 'New quiz'),
-  ),
+  GoRoute(path: 'new', builder: (context, state) => const QuizEditorScreen()),
   GoRoute(
     path: ':id',
     builder: (context, state) =>
         QuizDetailScreen(quizId: state.pathParameters['id']!),
     routes: [
-      // TODO(#17): quiz editor.
       GoRoute(
         path: 'edit',
-        builder: (context, state) => const PlaceholderPage(title: 'Edit quiz'),
+        builder: (context, state) =>
+            QuizEditorScreen(quizId: state.pathParameters['id']),
       ),
       // TODO(#22): quiz player.
       GoRoute(

@@ -81,7 +81,7 @@ void main() {
 
       await tester.tap(find.text('Create quiz'));
       await tester.pumpAndSettle();
-      expect(find.text('New quiz — coming soon'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'New quiz'), findsOneWidget);
     });
 
     testWidgets('lists quizzes with question count and tags', (tester) async {
