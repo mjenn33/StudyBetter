@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 
-import '../../app/placeholder_page.dart';
+import '../play/player_screen.dart';
 import 'detail/quiz_detail_screen.dart';
 import 'editor/quiz_editor_screen.dart';
 
@@ -26,10 +26,10 @@ final quizRoutes = <RouteBase>[
         builder: (context, state) =>
             QuizEditorScreen(quizId: state.pathParameters['id']),
       ),
-      // TODO(#22): quiz player.
       GoRoute(
         path: 'play',
-        builder: (context, state) => const PlaceholderPage(title: 'Play'),
+        builder: (context, state) =>
+            PlayerScreen(quizId: state.pathParameters['id']!),
       ),
     ],
   ),
