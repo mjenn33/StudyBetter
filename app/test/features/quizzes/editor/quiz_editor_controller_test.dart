@@ -66,15 +66,27 @@ void main() {
       expect(state.canSave, isFalse);
     });
 
-    test('edits make the draft dirty; a title makes it saveable', () async {
+    test('edits make the draft dirty and saveable as a draft', () async {
       final editor = await open(null);
 
       editor.setDescription('About capitals');
       expect(stateOf(null).isDirty, isTrue);
-      expect(stateOf(null).canSave, isFalse);
+      expect(stateOf(null).canSave, isTrue);
 
       editor.setTitle('  World Capitals ');
       expect(stateOf(null).canSave, isTrue);
+    });
+
+    test('saves an incomplete quiz as a draft', () async {
+      final editor = await open(null);
+      editor.setDescription('Questions will be added later.');
+
+      final saved = await editor.save();
+
+      expect(saved.title, isEmpty);
+      expect(saved.questions, isEmpty);
+      expect(validateQuiz(saved), isNotEmpty);
+      expect(stateOf(null).isDirty, isFalse);
     });
 
     test('save stores the quiz and makes the editor clean', () async {

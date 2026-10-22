@@ -23,8 +23,12 @@ class QuizEditorState {
 
   bool get isDirty => draft != saved;
 
-  /// A quiz needs a title before it can be saved.
-  bool get canSave => isDirty && draft.title.trim().isNotEmpty;
+  /// Drafts are deliberately saved even when incomplete. Validation is applied
+  /// when the quiz is played, exported, or published.
+  bool get canSave => isDirty;
+
+  /// Problems in the working draft, suitable for displaying in the editor.
+  List<ValidationIssue> get validationIssues => validateQuiz(draft);
 
   QuizEditorState copyWith({Quiz? saved, Quiz? draft, bool? isNew}) =>
       QuizEditorState(

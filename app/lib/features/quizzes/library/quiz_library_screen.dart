@@ -210,7 +210,7 @@ class QuizListTile extends ConsumerWidget {
       trailing: PopupMenuButton<_Action>(
         tooltip: 'Actions',
         onSelected: (action) => switch (action) {
-          _Action.play => context.go(QuizPaths.play(quiz.id)),
+          _Action.play => QuizActions.play(context, quiz),
           _Action.edit => context.go(QuizPaths.edit(quiz.id)),
           _Action.duplicate => QuizActions.duplicate(context, ref, quiz),
           _Action.delete => QuizActions.delete(context, ref, quiz),

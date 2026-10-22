@@ -8,6 +8,34 @@ import 'quiz_routes.dart';
 
 /// Library actions shared by the library list and the detail screen.
 abstract final class QuizActions {
+  /// Shows a clear message when [quiz] cannot be used outside the editor.
+  ///
+  /// Keep drafts permissive, but call this before playing, exporting, or
+  /// publishing a quiz.
+  static bool ensureValidFor(
+    BuildContext context,
+    Quiz quiz, {
+    required String action,
+  }) {
+    if (validateQuiz(quiz).isEmpty) return true;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            'This quiz has validation errors. Edit it before $action.',
+          ),
+        ),
+      );
+    return false;
+  }
+
+  /// Starts [quiz] only when its document is valid.
+  static void play(BuildContext context, Quiz quiz) {
+    if (!ensureValidFor(context, quiz, action: 'playing')) return;
+    GoRouter.of(context).go(QuizPaths.play(quiz.id));
+  }
+
   /// Makes an editable copy of [quiz] and offers to open it.
   static Future<void> duplicate(
     BuildContext context,

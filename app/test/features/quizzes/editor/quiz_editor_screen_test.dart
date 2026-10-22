@@ -48,6 +48,29 @@ void main() {
     expect(saved.settings.shuffleQuestions, isTrue);
   });
 
+  testWidgets(
+    'shows validation errors and saves an incomplete quiz as a draft',
+    (tester) async {
+      await pumpApp(tester, db: db, size: const Size(800, 1400));
+      await tester.tap(find.text('Create quiz'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Title is empty.'), findsOneWidget);
+      expect(find.text('A quiz needs at least one question.'), findsOneWidget);
+
+      await tester.enterText(field('Description'), 'Questions come later.');
+      await tester.pumpAndSettle();
+      expect(tester.widget<FilledButton>(saveButton()).onPressed, isNotNull);
+
+      await tester.tap(saveButton());
+      await tester.pumpAndSettle();
+
+      final saved = await onlyQuiz(db);
+      expect(saved.title, isEmpty);
+      expect(saved.questions, isEmpty);
+    },
+  );
+
   testWidgets('warns before leaving with unsaved changes', (tester) async {
     final quiz = await quizzes.save(testQuiz(title: 'World Capitals'));
     await pumpApp(tester, db: db, size: const Size(800, 1400));
@@ -117,6 +140,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Questions (2)'), findsOneWidget);
     expect(find.text('Capital of France?'), findsOneWidget);
+    expect(find.text('Option text is empty.'), findsNWidgets(2));
+    expect(find.text('Mark at least one option as correct.'), findsOneWidget);
 
     // Editing an existing question updates its tile.
     await tester.tap(find.text('Question 0'));

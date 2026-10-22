@@ -178,5 +178,22 @@ void main() {
       expect(find.widgetWithText(FilledButton, 'Play'), findsOneWidget);
       expect(find.widgetWithText(OutlinedButton, 'Edit'), findsOneWidget);
     });
+
+    testWidgets('blocks playing an invalid draft with a clear message', (
+      tester,
+    ) async {
+      await quizzes.save(testQuiz(title: 'Incomplete', questions: 0));
+      await pumpApp(tester, db: db);
+
+      await tester.tap(find.text('Incomplete'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Play'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('This quiz has validation errors. Edit it before playing.'),
+        findsOneWidget,
+      );
+    });
   });
 }

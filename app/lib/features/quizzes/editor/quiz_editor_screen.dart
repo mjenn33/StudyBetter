@@ -139,6 +139,7 @@ class _EditorState extends ConsumerState<_Editor> {
   Widget build(BuildContext context) {
     final state = ref.watch(quizEditorProvider(widget.quizId)).requireValue;
     final quiz = state.draft;
+    final issues = state.validationIssues;
 
     return PopScope(
       canPop: !state.isDirty,
@@ -167,9 +168,10 @@ class _EditorState extends ConsumerState<_Editor> {
                   _section(context, 'Details'),
                   TextField(
                     controller: _title,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Title',
                       border: OutlineInputBorder(),
+                      errorText: _errorFor(issues, 'title'),
                     ),
                     textCapitalization: TextCapitalization.sentences,
                     onChanged: _controller.setTitle,
@@ -210,14 +212,22 @@ class _EditorState extends ConsumerState<_Editor> {
                   _section(context, 'Settings'),
                   _SettingsEditor(
                     settings: quiz.settings,
+                    issues: issues,
                     onChanged: _controller.setSettings,
                   ),
                   const SizedBox(height: 24),
                   _section(context, 'Questions (${quiz.questions.length})'),
                   if (quiz.questions.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No questions yet.'),
+                      child: Text(
+                        _errorFor(issues, 'questions') ?? 'No questions yet.',
+                        style: _errorFor(issues, 'questions') == null
+                            ? null
+                            : TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                      ),
                     ),
                 ],
               ),
@@ -233,6 +243,7 @@ class _EditorState extends ConsumerState<_Editor> {
                     key: ValueKey(question.id),
                     index: index,
                     question: question,
+                    errors: _questionErrors(issues, index),
                     onTap: () => _editQuestion(question),
                     onDelete: () => _deleteQuestion(index, question),
                   );
@@ -262,6 +273,19 @@ class _EditorState extends ConsumerState<_Editor> {
     padding: const EdgeInsets.only(bottom: 12),
     child: Text(title, style: Theme.of(context).textTheme.titleMedium),
   );
+
+  String? _errorFor(List<ValidationIssue> issues, String path) {
+    final messages = [
+      for (final issue in issues)
+        if (issue.path == path) issue.message,
+    ];
+    return messages.isEmpty ? null : messages.join('\n');
+  }
+
+  List<String> _questionErrors(List<ValidationIssue> issues, int index) => [
+    for (final issue in issues)
+      if (issue.path.startsWith('questions[$index]')) issue.message,
+  ];
 }
 
 class _TagEditor extends StatelessWidget {
@@ -316,9 +340,14 @@ class _TagEditor extends StatelessWidget {
 }
 
 class _SettingsEditor extends StatelessWidget {
-  const _SettingsEditor({required this.settings, required this.onChanged});
+  const _SettingsEditor({
+    required this.settings,
+    required this.issues,
+    required this.onChanged,
+  });
 
   final QuizSettings settings;
+  final List<ValidationIssue> issues;
   final ValueChanged<QuizSettings> onChanged;
 
   static const _defaultLimitSeconds = 10 * 60;
@@ -359,9 +388,10 @@ class _SettingsEditor extends StatelessWidget {
               child: TextFormField(
                 key: const ValueKey('timeLimitMinutes'),
                 initialValue: '${(limit / 60).ceil()}',
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Minutes',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  errorText: _errorFor('settings.timeLimitSeconds'),
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -389,8 +419,24 @@ class _SettingsEditor extends StatelessWidget {
           onChanged: (v) =>
               onChanged(settings.copyWith(passingScorePercent: v.round())),
         ),
+        if (_errorFor('settings.passingScorePercent') case final error?)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              error,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
       ],
     );
+  }
+
+  String? _errorFor(String path) {
+    final messages = [
+      for (final issue in issues)
+        if (issue.path == path) issue.message,
+    ];
+    return messages.isEmpty ? null : messages.join('\n');
   }
 }
 
@@ -399,12 +445,14 @@ class _QuestionTile extends StatelessWidget {
     super.key,
     required this.index,
     required this.question,
+    required this.errors,
     required this.onTap,
     required this.onDelete,
   });
 
   final int index;
   final Question question;
+  final List<String> errors;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
@@ -426,8 +474,16 @@ class _QuestionTile extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text(
-          '${index + 1}. $type · ${question.options.length} options',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${index + 1}. $type · ${question.options.length} options'),
+            for (final error in errors)
+              Text(
+                error,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+          ],
         ),
         onTap: onTap,
         trailing: IconButton(

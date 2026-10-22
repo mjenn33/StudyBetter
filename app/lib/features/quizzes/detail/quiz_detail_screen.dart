@@ -75,9 +75,7 @@ class QuizDetailScreen extends ConsumerWidget {
               runSpacing: 12,
               children: [
                 FilledButton.icon(
-                  onPressed: entry.document.questions.isEmpty
-                      ? null
-                      : () => context.go(QuizPaths.play(quizId)),
+                  onPressed: () => QuizActions.play(context, entry.document),
                   icon: const Icon(Icons.play_arrow),
                   label: const Text('Play'),
                 ),
