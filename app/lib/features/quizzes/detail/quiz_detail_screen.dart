@@ -9,7 +9,7 @@ import '../quiz_actions.dart';
 import '../quiz_readiness.dart';
 import '../quiz_routes.dart';
 
-/// Overview of one quiz with its main actions. Stats are added in #28.
+/// Overview of one quiz with its main actions.
 class QuizDetailScreen extends ConsumerWidget {
   const QuizDetailScreen({super.key, required this.quizId});
 
@@ -127,6 +127,11 @@ class QuizDetailScreen extends ConsumerWidget {
                   icon: const Icon(Icons.edit),
                   label: const Text('Edit'),
                 ),
+              OutlinedButton.icon(
+                onPressed: () => context.go(QuizPaths.stats(quizId)),
+                icon: const Icon(Icons.insights_outlined),
+                label: const Text('Statistics'),
+              ),
             ],
           ),
         ],
