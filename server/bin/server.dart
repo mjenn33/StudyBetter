@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:study_better_server/config.dart';
+import 'package:study_better_server/db/database.dart';
 import 'package:study_better_server/server.dart';
 
 Future<void> main() async {
@@ -12,6 +13,7 @@ Future<void> main() async {
       'Tokens will stop working when the server restarts.',
     );
   }
+  final database = await Database.open(config);
 
   final server = await shelf_io.serve(
     buildHandler(config),
@@ -28,6 +30,7 @@ Future<void> main() async {
   for (final signal in signals) {
     signal.first.then((_) async {
       await server.close();
+      await database.close();
       exit(0);
     });
   }
