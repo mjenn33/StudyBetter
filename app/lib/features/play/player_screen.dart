@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:quiz_core/quiz_core.dart';
 
 import '../../data/repositories/library_repository.dart';
 import '../quizzes/quiz_readiness.dart';
+import '../quizzes/quiz_routes.dart';
 import 'player_controller.dart';
 
 /// Plays a quiz one question at a time.
@@ -149,20 +151,38 @@ class _PlayerState extends ConsumerState<_Player> {
 
     _ticker?.cancel();
     final messenger = ScaffoldMessenger.of(context);
-    AttemptScore score;
+    final router = GoRouter.of(context);
+    final String attemptId;
     try {
-      final (_, attempt) = await _controller.finishAndSave();
-      score = attempt.score;
+      (attemptId, _) = await _controller.finishAndSave();
     } catch (e) {
       // The attempt is over either way; show the score even if saving failed.
-      score = ref.read(playerProvider(widget.quizId)).requireValue.score;
+      if (!mounted) return;
+      setState(() => _finished = true);
       messenger.showSnackBar(
         SnackBar(content: Text('Could not save this attempt: $e')),
       );
+      await _showScoreDialog(timeUp: timeUp);
+      return;
     }
     if (!mounted) return;
     setState(() => _finished = true);
-    // TODO(#25): show the results screen instead.
+    if (timeUp) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text("Time's up — your answers were submitted."),
+          ),
+        );
+    }
+    // Replace the player so Back from the results goes to the quiz page.
+    router.replace(QuizPaths.results(widget.quizId, attemptId));
+  }
+
+  /// Fallback when the attempt couldn't be saved: the score in a dialog.
+  Future<void> _showScoreDialog({required bool timeUp}) async {
+    final score = ref.read(playerProvider(widget.quizId)).requireValue.score;
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
