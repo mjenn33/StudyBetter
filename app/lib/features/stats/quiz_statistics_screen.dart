@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quiz_core/quiz_core.dart' show Question;
 
 import '../../data/repositories/providers.dart';
 import '../../data/repositories/statistics_repository.dart';
@@ -36,7 +37,8 @@ class QuizStatisticsScreen extends ConsumerWidget {
           statistics: value,
           passingScorePercent: passingScore,
           questionPrompts: {
-            for (final question in entry?.document.questions ?? const [])
+            for (final question
+                in entry?.document.questions ?? const <Question>[])
               question.id: question.prompt,
           },
         ),
