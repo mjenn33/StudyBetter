@@ -149,9 +149,18 @@ void main() {
 
     test('adds, updates, removes, restores and reorders questions', () async {
       final editor = await open(null);
-      final q1 = editor.addQuestion();
-      final q2 = editor.addQuestion();
-      final q3 = editor.addQuestion();
+      Question add() {
+        final question = editor.newQuestion();
+        editor.addQuestion(question);
+        return question;
+      }
+
+      editor.newQuestion();
+      expect(stateOf(null).draft.questions, isEmpty);
+
+      final q1 = add();
+      final q2 = add();
+      final q3 = add();
 
       expect([q1.id, q2.id, q3.id], ['q1', 'q2', 'q3']);
       expect(q1.options.map((o) => o.id), ['a', 'b']);
@@ -173,7 +182,7 @@ void main() {
       expect(ids(), ['q1', 'q2', 'q3']);
 
       editor.removeQuestion('q1');
-      expect(editor.addQuestion().id, 'q1');
+      expect(editor.newQuestion().id, 'q1');
     });
   });
 }

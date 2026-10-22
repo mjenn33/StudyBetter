@@ -6,6 +6,7 @@ import 'package:quiz_core/quiz_core.dart';
 
 import '../../../data/repositories/library_repository.dart';
 import '../quiz_routes.dart';
+import 'question_editor_screen.dart';
 import 'quiz_editor_controller.dart';
 
 /// Creates a quiz ([quizId] `null`) or edits an existing one: details,
@@ -118,11 +119,20 @@ class _EditorState extends ConsumerState<_Editor> {
       );
   }
 
-  /// Opens a question for editing. The question editor arrives in #18.
-  void _editQuestion(Question question) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Editing questions is coming soon.')),
+  Future<void> _editQuestion(Question question) async {
+    final edited = await editQuestion(context, question);
+    if (edited != null) _controller.updateQuestion(edited);
+  }
+
+  /// Opens the question editor on a blank question; it is added to the quiz
+  /// only when the user taps Done.
+  Future<void> _addQuestion() async {
+    final created = await editQuestion(
+      context,
+      _controller.newQuestion(),
+      isNew: true,
     );
+    if (created != null) _controller.addQuestion(created);
   }
 
   @override
@@ -235,7 +245,7 @@ class _EditorState extends ConsumerState<_Editor> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: OutlinedButton.icon(
-                    onPressed: () => _editQuestion(_controller.addQuestion()),
+                    onPressed: _addQuestion,
                     icon: const Icon(Icons.add),
                     label: const Text('Add question'),
                   ),

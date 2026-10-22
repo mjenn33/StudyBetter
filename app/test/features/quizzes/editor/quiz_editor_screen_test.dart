@@ -98,10 +98,37 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Questions (1)'), findsOneWidget);
+
+    // Cancelling a new question adds nothing.
     await tester.tap(find.text('Add question'));
     await tester.pumpAndSettle();
+    expect(find.text('New question'), findsOneWidget);
+    await tester.tap(find.byType(CloseButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Questions (1)'), findsOneWidget);
+
+    await tester.tap(find.text('Add question'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Question'),
+      'Capital of France?',
+    );
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
     expect(find.text('Questions (2)'), findsOneWidget);
-    expect(find.text('Untitled question'), findsOneWidget);
+    expect(find.text('Capital of France?'), findsOneWidget);
+
+    // Editing an existing question updates its tile.
+    await tester.tap(find.text('Question 0'));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit question'), findsOneWidget);
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Question'),
+      'Capital of Peru?',
+    );
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(find.text('Capital of Peru?'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Delete question').first);
     await tester.pumpAndSettle();
@@ -114,6 +141,10 @@ void main() {
     await tester.pumpAndSettle();
     final saved = (await quizzes.getById(quiz.id))!.document;
     expect(saved.questions.map((q) => q.id), ['q0', 'q1']);
+    expect(saved.questions.map((q) => q.prompt), [
+      'Capital of Peru?',
+      'Capital of France?',
+    ]);
   });
 
   testWidgets('time limit and passing score settings', (tester) async {

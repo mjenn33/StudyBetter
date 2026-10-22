@@ -105,20 +105,20 @@ class QuizEditorController extends AsyncNotifier<QuizEditorState> {
   void setSettings(QuizSettings settings) =>
       _update((q) => q.copyWith(settings: settings));
 
-  /// Appends a new single-answer question with two empty options and returns
-  /// it.
-  Question addQuestion() {
-    final question = Question(
-      id: nextQuestionId(_current.draft.questions.map((q) => q.id)),
-      prompt: '',
-      options: const [
-        Option(id: 'a', text: ''),
-        Option(id: 'b', text: ''),
-      ],
-    );
-    _update((q) => q.copyWith(questions: [...q.questions, question]));
-    return question;
-  }
+  /// A blank single-answer question with two empty options and the next free
+  /// id. It isn't part of the quiz until passed to [addQuestion].
+  Question newQuestion() => Question(
+    id: nextQuestionId(_current.draft.questions.map((q) => q.id)),
+    prompt: '',
+    options: const [
+      Option(id: 'a', text: ''),
+      Option(id: 'b', text: ''),
+    ],
+  );
+
+  /// Appends [question] to the quiz.
+  void addQuestion(Question question) =>
+      _update((q) => q.copyWith(questions: [...q.questions, question]));
 
   /// Replaces the question with the same id as [question].
   void updateQuestion(Question question) => _update(
