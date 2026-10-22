@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,19 +53,78 @@ class _PlayerState extends ConsumerState<_Player> {
   /// Set once the attempt is over, so leaving no longer asks.
   bool _finished = false;
 
+  /// True while one of our confirmation dialogs is open, so running out of
+  /// time can close it.
+  bool _dialogOpen = false;
+
+  /// Redraws the countdown; only runs when the quiz has a time limit.
+  Timer? _ticker;
+
+  /// Stops the clock while the app is hidden (in the background on Android,
+  /// minimized on Windows).
+  late final AppLifecycleListener _lifecycle = AppLifecycleListener(
+    onHide: () => _controller.pause(),
+    onShow: () => _controller.resume(),
+  );
+
   PlayerController get _controller =>
       ref.read(playerProvider(widget.quizId).notifier);
 
   PlayerState get _state => widget.state;
 
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle;
+    if (_state.quiz.settings.timeLimitSeconds != null) {
+      _ticker = Timer.periodic(
+        const Duration(milliseconds: 250),
+        (_) => _tick(),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  void _tick() {
+    if (!mounted || _finished) return;
+    final state = ref.read(playerProvider(widget.quizId)).value;
+    if (state != null && state.isTimeUp(ref.read(playerClockProvider).now())) {
+      _onTimeUp();
+    } else {
+      setState(() {});
+    }
+  }
+
+  void _onTimeUp() {
+    _ticker?.cancel();
+    // Dialogs live on the root navigator, above the player's own.
+    if (_dialogOpen) Navigator.of(context, rootNavigator: true).pop();
+    _finish(timeUp: true);
+  }
+
+  Future<T?> _showDialog<T>(WidgetBuilder builder) async {
+    _dialogOpen = true;
+    try {
+      return await showDialog<T>(context: context, builder: builder);
+    } finally {
+      _dialogOpen = false;
+    }
+  }
+
   void _nextOrFinish() => _state.isLast ? _finish() : _controller.next();
 
-  Future<void> _finish() async {
+  Future<void> _finish({bool timeUp = false}) async {
+    if (_finished) return;
     final unanswered = _state.unansweredCount;
-    if (unanswered > 0) {
-      final finish = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
+    if (unanswered > 0 && !timeUp) {
+      final finish = await _showDialog<bool>(
+        (context) => AlertDialog(
           title: const Text('Finish quiz?'),
           content: Text(
             unanswered == 1
@@ -83,16 +144,20 @@ class _PlayerState extends ConsumerState<_Player> {
           ],
         ),
       );
-      if (!(finish ?? false) || !mounted) return;
+      if (!(finish ?? false) || !mounted || _finished) return;
     }
 
-    final score = ref.read(playerProvider(widget.quizId)).requireValue.score;
+    _ticker?.cancel();
+    final score = _controller.finish().score;
     setState(() => _finished = true);
     // TODO(#25): show the results screen instead.
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(score.passed ? 'Passed' : 'Not passed'),
+        title: Text(
+          '${timeUp ? "Time's up · " : ''}'
+          '${score.passed ? 'Passed' : 'Not passed'}',
+        ),
         content: Text(
           '${score.points} / ${score.maxPoints} points '
           '(${score.percent.round()}%)\n'
@@ -111,9 +176,8 @@ class _PlayerState extends ConsumerState<_Player> {
   }
 
   Future<void> _confirmLeave() async {
-    final leave = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
+    final leave = await _showDialog<bool>(
+      (context) => AlertDialog(
         title: const Text('Leave quiz?'),
         content: const Text('Your answers in this attempt will be lost.'),
         actions: [
@@ -165,6 +229,14 @@ class _PlayerState extends ConsumerState<_Player> {
           child: Scaffold(
             appBar: AppBar(
               title: Text(state.quiz.title),
+              actions: [
+                if (state.remainingMs(ref.read(playerClockProvider).now())
+                    case final remaining?)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: _Countdown(remainingMs: remaining),
+                  ),
+              ],
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(4),
                 child: LinearProgressIndicator(
@@ -269,3 +341,32 @@ const _numpadKeys = [
   LogicalKeyboardKey.numpad8,
   LogicalKeyboardKey.numpad9,
 ];
+
+/// Time left, as `m:ss`; red in the last minute.
+class _Countdown extends StatelessWidget {
+  const _Countdown({required this.remainingMs});
+
+  final int remainingMs;
+
+  @override
+  Widget build(BuildContext context) {
+    final seconds = (remainingMs / 1000).ceil();
+    final text =
+        '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}';
+    final urgent = seconds <= 60;
+    final scheme = Theme.of(context).colorScheme;
+    return Chip(
+      avatar: Icon(
+        Icons.timer_outlined,
+        size: 18,
+        color: urgent ? scheme.onErrorContainer : null,
+      ),
+      label: Text(
+        text,
+        semanticsLabel: '$seconds seconds left',
+        style: urgent ? TextStyle(color: scheme.onErrorContainer) : null,
+      ),
+      backgroundColor: urgent ? scheme.errorContainer : null,
+    );
+  }
+}
