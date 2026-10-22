@@ -3,9 +3,11 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'converters.dart';
+import 'library_item_row.dart';
 import 'tables.dart';
 
-export 'tables.dart' show LibraryOrigin;
+export 'library_item_row.dart';
+export 'tables.dart' show LibraryItemColumns, LibraryOrigin;
 
 part 'app_database.g.dart';
 
