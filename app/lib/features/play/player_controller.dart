@@ -3,10 +3,12 @@ import 'dart:math';
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quiz_core/quiz_core.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../data/repositories/library_repository.dart';
 import '../../data/repositories/providers.dart';
 import '../quizzes/quiz_readiness.dart';
+import 'attempt_record.dart';
 
 /// Thrown when the quiz to play has validation problems.
 class QuizNotPlayableException implements Exception {
@@ -279,6 +281,18 @@ class PlayerController extends AsyncNotifier<PlayerState> {
     final s = _state;
     if (s.isFinished || s.segmentStart != null) return;
     _set(s.copyWith(segmentStart: _now()));
+  }
+
+  /// Ends the attempt, saves it with every answer and returns the stored
+  /// attempt's id with the attempt. Attempts that are left unfinished are
+  /// never saved.
+  Future<(String, FinishedAttempt)> finishAndSave() async {
+    final attempt = finish();
+    final id = const Uuid().v4();
+    await ref
+        .read(attemptRepositoryProvider)
+        .save(attemptRecordFrom(attempt, id: id));
+    return (id, attempt);
   }
 
   /// Ends the attempt and returns it. The time on the current question is
