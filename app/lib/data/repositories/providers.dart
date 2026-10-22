@@ -7,6 +7,7 @@ import 'deck_repository.dart';
 import 'library_repository.dart';
 import 'quiz_repository.dart';
 import 'review_repository.dart';
+import 'statistics_repository.dart';
 
 final attemptRepositoryProvider = Provider<AttemptRepository>(
   (ref) => AttemptRepository(ref.watch(appDatabaseProvider)),
@@ -22,6 +23,10 @@ final quizRepositoryProvider = Provider<QuizRepository>(
 
 final deckRepositoryProvider = Provider<DeckRepository>(
   (ref) => DeckRepository(ref.watch(appDatabaseProvider)),
+);
+
+final statisticsRepositoryProvider = Provider<StatisticsRepository>(
+  (ref) => StatisticsRepository(ref.watch(appDatabaseProvider)),
 );
 
 /// Quizzes in the library (not deleted), most recently updated first.
