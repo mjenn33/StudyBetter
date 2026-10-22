@@ -21,28 +21,19 @@ class DeckRoutes {
 
   Future<Response> get(Request request) async {
     final id = request.params['id']!;
+    final userId = authenticatedUserId(request, auth);
     final rows = await connection.execute(
-      Sql.named(
-        'SELECT owner_id, visibility::text, document::text FROM decks WHERE id = @id',
-      ),
-      parameters: {'id': id},
+      Sql.named('''
+      UPDATE decks SET download_count = download_count + 1
+      WHERE id = @id AND (visibility <> 'private' OR owner_id = CAST(@user AS uuid))
+      RETURNING document::text, version
+    '''),
+      parameters: {'id': id, 'user': userId},
     );
     if (rows.isEmpty) return Response.notFound('Deck not found');
-
-    final row = rows.first;
-    final userId = authenticatedUserId(request, auth);
-    if (row[1] as String == 'private' && userId != row[0] as String) {
-      return Response.notFound('Deck not found');
-    }
-    final updated = await connection.execute(
-      Sql.named(
-        'UPDATE decks SET download_count = download_count + 1 WHERE id = @id RETURNING version',
-      ),
-      parameters: {'id': id},
-    );
     return jsonResponse(
-      jsonDecode(row[2] as String),
-      headers: {'etag': '${updated.first[0]}'},
+      jsonDecode(rows.first[0] as String),
+      headers: {'etag': '${rows.first[1]}'},
     );
   }
 
