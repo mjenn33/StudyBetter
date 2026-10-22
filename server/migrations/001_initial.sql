@@ -33,10 +33,11 @@ CREATE TABLE quizzes (
   item_count integer NOT NULL DEFAULT 0,
   download_count integer NOT NULL DEFAULT 0,
   document jsonb NOT NULL,
+  search_vector tsvector NOT NULL DEFAULT ''::tsvector,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX quizzes_search_idx ON quizzes USING gin(to_tsvector('simple'::regconfig, coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(tags::text, '')));
+CREATE INDEX quizzes_search_idx ON quizzes USING gin(search_vector);
 CREATE INDEX quizzes_owner_idx ON quizzes(owner_id);
 
 CREATE TABLE decks (
@@ -51,8 +52,9 @@ CREATE TABLE decks (
   item_count integer NOT NULL DEFAULT 0,
   download_count integer NOT NULL DEFAULT 0,
   document jsonb NOT NULL,
+  search_vector tsvector NOT NULL DEFAULT ''::tsvector,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX decks_search_idx ON decks USING gin(to_tsvector('simple'::regconfig, coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(tags::text, '')));
+CREATE INDEX decks_search_idx ON decks USING gin(search_vector);
 CREATE INDEX decks_owner_idx ON decks(owner_id);
