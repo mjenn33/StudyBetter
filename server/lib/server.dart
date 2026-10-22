@@ -2,6 +2,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
 import 'config.dart';
+import 'protection.dart';
 import 'auth/auth_middleware.dart';
 import 'auth/auth_service.dart';
 import 'db/database.dart';
@@ -23,9 +24,9 @@ Handler buildHandler(
 }) {
   if (database == null) {
     final api = Router()..get('/health', health);
-    return const Pipeline().addHandler(
-      (Router()..mount('$apiBasePath/', api.call)).call,
-    );
+    return const Pipeline()
+        .addMiddleware(protection())
+        .addHandler((Router()..mount('$apiBasePath/', api.call)).call);
   }
   final auth = AuthService(database.connection, config);
   final routes = AuthRoutes(database.connection, auth);
@@ -37,11 +38,13 @@ Handler buildHandler(
     ..post('/auth/login', routes.login)
     ..post('/auth/refresh', routes.refresh)
     ..get('/me', requireAuth(auth)(routes.me))
+    ..get('/decks', decks.catalog)
     ..get('/decks/<id>', decks.get)
     ..post('/decks', requireAuth(auth)(decks.create))
     ..put('/decks/<id>', requireAuth(auth)(decks.update))
     ..delete('/decks/<id>', requireAuth(auth)(decks.delete))
     ..get('/me/decks', requireAuth(auth)(decks.mine))
+    ..get('/quizzes', quizzes.catalog)
     ..get('/quizzes/<id>', quizzes.get)
     ..post('/quizzes', requireAuth(auth)(quizzes.create))
     ..put('/quizzes/<id>', requireAuth(auth)(quizzes.update))
@@ -53,5 +56,5 @@ Handler buildHandler(
   if (enableLogging) {
     pipeline = pipeline.addMiddleware(logRequests());
   }
-  return pipeline.addHandler(root.call);
+  return pipeline.addMiddleware(protection()).addHandler(root.call);
 }

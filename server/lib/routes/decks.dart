@@ -8,6 +8,7 @@ import 'package:shelf_router/shelf_router.dart';
 import '../auth/auth_middleware.dart';
 import '../auth/auth_service.dart';
 import '../json_response.dart';
+import 'catalog.dart';
 
 class DeckRoutes {
   DeckRoutes(this.connection, this.auth);
@@ -15,11 +16,14 @@ class DeckRoutes {
   final Connection connection;
   final AuthService auth;
 
+  Future<Response> catalog(Request request) =>
+      catalogResponse(connection, 'decks', request);
+
   Future<Response> get(Request request) async {
     final id = request.params['id']!;
     final rows = await connection.execute(
       Sql.named(
-        'SELECT owner_id, visibility, document::text FROM decks WHERE id = @id',
+        'SELECT owner_id, visibility::text, document::text FROM decks WHERE id = @id',
       ),
       parameters: {'id': id},
     );
@@ -30,7 +34,16 @@ class DeckRoutes {
     if (row[1] as String == 'private' && userId != row[0] as String) {
       return Response.notFound('Deck not found');
     }
-    return jsonResponse(jsonDecode(row[2] as String));
+    final updated = await connection.execute(
+      Sql.named(
+        'UPDATE decks SET download_count = download_count + 1 WHERE id = @id RETURNING version',
+      ),
+      parameters: {'id': id},
+    );
+    return jsonResponse(
+      jsonDecode(row[2] as String),
+      headers: {'etag': '${updated.first[0]}'},
+    );
   }
 
   Future<Response> create(Request request) async {
@@ -125,7 +138,7 @@ class DeckRoutes {
   Future<Response> mine(Request request) async {
     final rows = await connection.execute(
       Sql.named('''
-        SELECT id, title, description, tags, language, visibility, version,
+        SELECT id, title, description, tags, language, visibility::text, version,
                item_count, download_count, created_at, updated_at
         FROM decks WHERE owner_id = @owner ORDER BY updated_at DESC
       '''),
