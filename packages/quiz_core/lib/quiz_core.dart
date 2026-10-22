@@ -2,6 +2,7 @@
 /// validation, scoring and spaced repetition.
 library;
 
+export 'src/documents/documents.dart';
 export 'src/models/models.dart';
 export 'src/schema.dart';
 export 'src/scoring/scoring.dart';
