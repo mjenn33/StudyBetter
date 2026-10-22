@@ -187,8 +187,12 @@ void main() {
 
       await tester.pump(const Duration(seconds: 60));
       await tester.pumpAndSettle();
-      expect(find.text("Time's up · Not passed"), findsOneWidget);
-      expect(find.textContaining('1 / 4 points'), findsOneWidget);
+      expect(
+        find.text("Time's up — your answers were submitted."),
+        findsOneWidget,
+      );
+      expect(find.text('Not passed'), findsOneWidget);
+      expect(find.text('1 / 4 points · pass mark 70%'), findsOneWidget);
     });
 
     testWidgets('time up closes an open confirmation first', (tester) async {

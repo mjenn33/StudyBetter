@@ -69,10 +69,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Passed'), findsOneWidget);
-    expect(find.textContaining('4 / 4 points (100%)'), findsOneWidget);
-    await tester.tap(find.text('Done'));
+    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('4 / 4 points · pass mark 70%'), findsOneWidget);
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.text('Question 1 of 3 · 0 answered'), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Play'), findsOneWidget);
   });
 
   testWidgets('finishing with unanswered questions asks first', (tester) async {
@@ -96,7 +98,8 @@ void main() {
     await tester.tap(find.text('Finish').last);
     await tester.pumpAndSettle();
     expect(find.text('Not passed'), findsOneWidget);
-    expect(find.textContaining('3 skipped'), findsOneWidget);
+    expect(find.widgetWithText(Card, 'Skipped'), findsOneWidget);
+    expect(find.text('0 / 4 points · pass mark 70%'), findsOneWidget);
   });
 
   testWidgets('keyboard: number keys select, Enter goes on', (tester) async {

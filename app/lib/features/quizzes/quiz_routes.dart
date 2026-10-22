@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 
+import '../../app/placeholder_page.dart';
 import '../play/player_screen.dart';
+import '../results/results_screen.dart';
 import 'detail/quiz_detail_screen.dart';
 import 'editor/quiz_editor_screen.dart';
 
@@ -11,6 +13,10 @@ abstract final class QuizPaths {
   static String detail(String id) => '/quizzes/$id';
   static String edit(String id) => '/quizzes/$id/edit';
   static String play(String id) => '/quizzes/$id/play';
+  static String results(String id, String attemptId) =>
+      '/quizzes/$id/attempts/$attemptId';
+  static String review(String id, String attemptId) =>
+      '/quizzes/$id/attempts/$attemptId/review';
 }
 
 /// Routes nested under [QuizPaths.library].
@@ -30,6 +36,21 @@ final quizRoutes = <RouteBase>[
         path: 'play',
         builder: (context, state) =>
             PlayerScreen(quizId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: 'attempts/:attemptId',
+        builder: (context, state) => ResultsScreen(
+          quizId: state.pathParameters['id']!,
+          attemptId: state.pathParameters['attemptId']!,
+        ),
+        routes: [
+          // TODO(#26): answer review screen.
+          GoRoute(
+            path: 'review',
+            builder: (context, state) =>
+                const PlaceholderPage(title: 'Review answers'),
+          ),
+        ],
       ),
     ],
   ),
