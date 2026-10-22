@@ -86,6 +86,27 @@ class _DeckEditorState extends ConsumerState<_DeckEditor> {
     if (wasNew) context.go(DeckPaths.edit(saved.id));
   }
 
+  /// Persists the completed cards and leaves a fresh card ready for entry.
+  Future<void> _saveAndAddNext() async {
+    final state = ref.read(deckEditorProvider(widget.deckId)).requireValue;
+    if (validateDeck(state.draft).isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Complete the title, front, and back before adding another card.',
+          ),
+        ),
+      );
+      return;
+    }
+    await _controller.save();
+    _controller.addCard();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Card saved. Enter the next card.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(deckEditorProvider(widget.deckId)).requireValue;
@@ -192,13 +213,21 @@ class _DeckEditorState extends ConsumerState<_DeckEditor> {
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             sliver: SliverToBoxAdapter(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  onPressed: _controller.addCard,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add card'),
-                ),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _controller.addCard,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add card'),
+                  ),
+                  FilledButton.icon(
+                    onPressed: _saveAndAddNext,
+                    icon: const Icon(Icons.save_alt_outlined),
+                    label: const Text('Save and add next'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -332,6 +361,21 @@ class _CardTile extends StatelessWidget {
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
             onChanged: (back) => onChanged(card.copyWith(back: back)),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            key: ValueKey('${card.id}-hint'),
+            initialValue: card.hint ?? '',
+            decoration: const InputDecoration(
+              labelText: 'Hint (optional)',
+              border: OutlineInputBorder(),
+            ),
+            minLines: 1,
+            maxLines: 2,
+            textCapitalization: TextCapitalization.sentences,
+            onChanged: (hint) => onChanged(
+              card.copyWith(hint: hint.trim().isEmpty ? null : hint),
+            ),
           ),
         ],
       ),
