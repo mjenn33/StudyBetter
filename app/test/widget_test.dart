@@ -1,34 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:study_better/app/app.dart';
+import 'package:study_better/data/database/app_database.dart';
 
-Future<void> pumpApp(WidgetTester tester, Size size) async {
-  tester.view.physicalSize = size;
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-  await tester.pumpWidget(const ProviderScope(child: StudyBetterApp()));
-  await tester.pumpAndSettle();
-}
+import 'helpers.dart';
 
 void main() {
+  late AppDatabase db;
+  setUp(() => db = testDatabase());
+  tearDown(() => db.close());
+
   testWidgets('narrow screens use a bottom navigation bar', (tester) async {
-    await pumpApp(tester, const Size(400, 800));
+    await pumpApp(tester, db: db, size: const Size(400, 800));
 
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byType(NavigationRail), findsNothing);
-    expect(find.text('Quizzes — coming soon'), findsOneWidget);
   });
 
   testWidgets('wide screens use a navigation rail', (tester) async {
-    await pumpApp(tester, const Size(1200, 800));
+    await pumpApp(tester, db: db, size: const Size(1200, 800));
 
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
   });
 
+  testWidgets('the app opens on the quiz library', (tester) async {
+    await pumpApp(tester, db: db);
+
+    expect(find.text('No quizzes yet'), findsOneWidget);
+  });
+
   testWidgets('selecting a destination opens its section', (tester) async {
-    await pumpApp(tester, const Size(400, 800));
+    await pumpApp(tester, db: db);
 
     for (final label in ['Flashcards', 'Stats', 'Catalog', 'Settings']) {
       await tester.tap(

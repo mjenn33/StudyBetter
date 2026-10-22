@@ -1,6 +1,9 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/quizzes/library/quiz_library_screen.dart';
+import '../features/quizzes/quiz_routes.dart';
 import 'app_shell.dart';
 import 'destinations.dart';
 import 'placeholder_page.dart';
@@ -20,8 +23,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               routes: [
                 GoRoute(
                   path: destination.path,
-                  builder: (context, state) =>
-                      PlaceholderPage(title: destination.label),
+                  builder: (context, state) => _sectionPage(destination),
+                  routes: _sectionRoutes(destination),
                 ),
               ],
             ),
@@ -32,3 +35,15 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+/// The root page of a section; sections not built yet show a placeholder.
+Widget _sectionPage(AppDestination destination) => switch (destination.path) {
+  QuizPaths.library => const QuizLibraryScreen(),
+  _ => PlaceholderPage(title: destination.label),
+};
+
+List<RouteBase> _sectionRoutes(AppDestination destination) =>
+    switch (destination.path) {
+      QuizPaths.library => quizRoutes,
+      _ => const [],
+    };
