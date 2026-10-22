@@ -28,7 +28,7 @@ class QuizLibraryScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'Import',
             icon: const Icon(Icons.file_open_outlined),
-            onPressed: () => QuizActions.import(context),
+            onPressed: () => QuizActions.import(context, ref),
           ),
         ],
       ),
@@ -56,11 +56,11 @@ class QuizLibraryScreen extends ConsumerWidget {
   }
 }
 
-class _EmptyLibrary extends StatelessWidget {
+class _EmptyLibrary extends ConsumerWidget {
   const _EmptyLibrary();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
@@ -92,7 +92,7 @@ class _EmptyLibrary extends StatelessWidget {
                   label: const Text('Create quiz'),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () => QuizActions.import(context),
+                  onPressed: () => QuizActions.import(context, ref),
                   icon: const Icon(Icons.file_open_outlined),
                   label: const Text('Import'),
                 ),
@@ -225,6 +225,7 @@ class QuizListTile extends ConsumerWidget {
           _Action.play => context.go(QuizPaths.play(quiz.id)),
           _Action.edit => context.go(QuizPaths.edit(quiz.id)),
           _Action.duplicate => QuizActions.duplicate(context, ref, quiz),
+          _Action.export => QuizActions.export(context, ref, quiz),
           _Action.delete => QuizActions.delete(context, ref, quiz),
         },
         itemBuilder: (context) => [
@@ -235,6 +236,7 @@ class QuizListTile extends ConsumerWidget {
             value: _Action.duplicate,
             child: Text('Duplicate'),
           ),
+          const PopupMenuItem(value: _Action.export, child: Text('Export')),
           const PopupMenuItem(value: _Action.delete, child: Text('Delete')),
         ],
       ),
@@ -242,4 +244,4 @@ class QuizListTile extends ConsumerWidget {
   }
 }
 
-enum _Action { play, edit, duplicate, delete }
+enum _Action { play, edit, duplicate, export, delete }

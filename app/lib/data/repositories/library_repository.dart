@@ -144,6 +144,22 @@ abstract class LibraryRepository<T extends Table, D> {
     });
   }
 
+  /// Stores an imported [document] exactly as it is (version and timestamps
+  /// unchanged), as a local item the user owns. A deleted item with the same
+  /// id is overwritten. Throws [StateError] if a live item with its id
+  /// exists; use [save] to replace one.
+  Future<D> import(D document) {
+    return db.transaction(() async {
+      final id = idOf(document);
+      final existing = await _row(id);
+      if (existing != null && existing.deletedAt == null) {
+        throw StateError('An item with id $id already exists.');
+      }
+      await _write(document, origin: LibraryOrigin.local, isOwnedByMe: true);
+      return document;
+    });
+  }
+
   /// Creates an editable local copy of item [id] (including read-only
   /// downloaded items) and returns it.
   Future<D> duplicate(String id) {

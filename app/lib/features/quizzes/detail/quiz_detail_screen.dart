@@ -46,7 +46,9 @@ class QuizDetailScreen extends ConsumerWidget {
           PopupMenuButton<String>(
             tooltip: 'More',
             onSelected: (value) async {
-              if (value == 'duplicate') {
+              if (value == 'export') {
+                await QuizActions.export(context, ref, entry.document);
+              } else if (value == 'duplicate') {
                 await QuizActions.duplicate(context, ref, entry.document);
               } else if (value == 'delete') {
                 final router = GoRouter.of(context);
@@ -56,6 +58,7 @@ class QuizDetailScreen extends ConsumerWidget {
             },
             itemBuilder: (context) => const [
               PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
+              PopupMenuItem(value: 'export', child: Text('Export')),
               PopupMenuItem(value: 'delete', child: Text('Delete')),
             ],
           ),

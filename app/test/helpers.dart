@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiz_core/quiz_core.dart';
 import 'package:study_better/app/app.dart';
@@ -20,13 +21,14 @@ Future<ProviderContainer> pumpApp(
   WidgetTester tester, {
   required AppDatabase db,
   Size size = const Size(400, 800),
+  List<Override> overrides = const [],
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 
   final container = ProviderContainer(
-    overrides: [appDatabaseProvider.overrideWithValue(db)],
+    overrides: [appDatabaseProvider.overrideWithValue(db), ...overrides],
   );
   addTearDown(container.dispose);
   await tester.pumpWidget(
