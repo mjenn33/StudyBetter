@@ -218,4 +218,35 @@ void main() {
       'message': 'Title is empty.',
     });
   });
+
+  group('validateQuestion', () {
+    test('a valid question has no issues', () {
+      expect(validateQuestion(first), isEmpty);
+    });
+
+    test('uses paths relative to the question', () {
+      final q = first.copyWith(
+        prompt: '',
+        options: [first.options[0].copyWith(text: '')],
+        correctOptionIds: [],
+        points: 0,
+      );
+      expect(
+        [for (final i in validateQuestion(q)) (i.path, i.code)],
+        [
+          ('prompt', ValidationCode.emptyText),
+          ('options', ValidationCode.tooFewOptions),
+          ('options[0].text', ValidationCode.emptyText),
+          ('correctOptionIds', ValidationCode.noCorrectOption),
+          ('points', ValidationCode.outOfRange),
+        ],
+      );
+    });
+
+    test('matches validateQuiz for the same question', () {
+      final q = first.copyWith(correctOptionIds: ['a', 'b']);
+      final inQuiz = validateQuiz(withFirst(q)).map((i) => i.code);
+      expect(validateQuestion(q).map((i) => i.code), inQuiz);
+    });
+  });
 }

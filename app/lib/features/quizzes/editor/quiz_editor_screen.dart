@@ -7,6 +7,7 @@ import 'package:quiz_core/quiz_core.dart';
 import '../../../data/repositories/library_repository.dart';
 import '../quiz_routes.dart';
 import 'question_editor_screen.dart';
+import '../quiz_readiness.dart';
 import 'quiz_editor_controller.dart';
 
 /// Creates a quiz ([quizId] `null`) or edits an existing one: details,
@@ -139,6 +140,7 @@ class _EditorState extends ConsumerState<_Editor> {
   Widget build(BuildContext context) {
     final state = ref.watch(quizEditorProvider(widget.quizId)).requireValue;
     final quiz = state.draft;
+    final issues = state.showIssues ? state.issues : IssueIndex(const []);
 
     return PopScope(
       canPop: !state.isDirty,
@@ -164,12 +166,23 @@ class _EditorState extends ConsumerState<_Editor> {
               padding: const EdgeInsets.all(16),
               sliver: SliverList.list(
                 children: [
+                  if (!issues.isEmpty) ...[
+                    QuizProblemsCard(
+                      problems: issues.issues,
+                      message:
+                          '${problemCount(issues.length)}. You can save this '
+                          "quiz as a draft, but it can't be played or "
+                          'exported until they are fixed.',
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   _section(context, 'Details'),
                   TextField(
                     controller: _title,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Title',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      errorText: issues.messageAt('title'),
                     ),
                     textCapitalization: TextCapitalization.sentences,
                     onChanged: _controller.setTitle,
@@ -219,6 +232,8 @@ class _EditorState extends ConsumerState<_Editor> {
                       padding: EdgeInsets.symmetric(vertical: 8),
                       child: Text('No questions yet.'),
                     ),
+                  for (final issue in issues.at('questions'))
+                    ErrorText(issue.message),
                 ],
               ),
             ),
@@ -233,6 +248,7 @@ class _EditorState extends ConsumerState<_Editor> {
                     key: ValueKey(question.id),
                     index: index,
                     question: question,
+                    problems: issues.under('questions[$index]'),
                     onTap: () => _editQuestion(question),
                     onDelete: () => _deleteQuestion(index, question),
                   );
@@ -399,12 +415,16 @@ class _QuestionTile extends StatelessWidget {
     super.key,
     required this.index,
     required this.question,
+    required this.problems,
     required this.onTap,
     required this.onDelete,
   });
 
   final int index;
   final Question question;
+
+  /// Validation problems of this question; shown on the tile.
+  final List<ValidationIssue> problems;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
@@ -426,8 +446,18 @@ class _QuestionTile extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text(
-          '${index + 1}. $type · ${question.options.length} options',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${index + 1}. $type · ${question.options.length} options'),
+            if (problems.isNotEmpty)
+              ErrorText(
+                problems.length == 1
+                    ? problems.first.message
+                    : '${problems.first.message} '
+                          '(+${problems.length - 1} more)',
+              ),
+          ],
         ),
         onTap: onTap,
         trailing: IconButton(

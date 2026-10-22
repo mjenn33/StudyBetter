@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quiz_core/quiz_core.dart';
 
+import '../quiz_readiness.dart';
 import 'question_edits.dart';
 
 /// Opens [question] in a full-screen editor and returns the edited question,
@@ -156,6 +157,10 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   Widget build(BuildContext context) {
     final q = _question;
     final isSingle = q.type == QuestionType.single;
+    // A new question shows its problems once the user starts editing it.
+    final issues = IssueIndex(
+      !widget.isNew || _isDirty ? validateQuestion(q) : const [],
+    );
 
     return PopScope(
       canPop: !_isDirty,
@@ -180,9 +185,10 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
           children: [
             TextField(
               controller: _prompt,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Question',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                errorText: issues.messageAt('prompt'),
               ),
               minLines: 1,
               maxLines: 4,
@@ -213,6 +219,11 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
                   : 'Options — check every correct one',
               style: Theme.of(context).textTheme.titleSmall,
             ),
+            for (final issue in [
+              ...issues.at('options'),
+              ...issues.under('correctOptionIds'),
+            ])
+              ErrorText(issue.message),
             const SizedBox(height: 8),
             RadioGroup<String>(
               groupValue: isSingle && q.correctOptionIds.isNotEmpty
@@ -231,6 +242,9 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
                       isSingle: isSingle,
                       isCorrect: q.isCorrect(option.id),
                       controller: _optionController(option),
+                      errorText:
+                          issues.messageAt('options[$i].text') ??
+                          issues.messageAt('options[$i].id'),
                       canRemove: q.canRemoveOption,
                       onTextChanged: (text) =>
                           _edit((q) => q.withOptionText(option.id, text)),
@@ -279,9 +293,10 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
                 width: 160,
                 child: TextField(
                   controller: _points,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Points',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    errorText: issues.messageAt('points'),
                   ),
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -309,6 +324,7 @@ class _OptionRow extends StatelessWidget {
     required this.isSingle,
     required this.isCorrect,
     required this.controller,
+    this.errorText,
     required this.canRemove,
     required this.onTextChanged,
     required this.onToggleCorrect,
@@ -320,6 +336,7 @@ class _OptionRow extends StatelessWidget {
   final bool isSingle;
   final bool isCorrect;
   final TextEditingController controller;
+  final String? errorText;
   final bool canRemove;
   final ValueChanged<String> onTextChanged;
   final VoidCallback onToggleCorrect;
@@ -347,6 +364,7 @@ class _OptionRow extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: label,
                 border: const OutlineInputBorder(),
+                errorText: errorText,
               ),
               onChanged: onTextChanged,
             ),

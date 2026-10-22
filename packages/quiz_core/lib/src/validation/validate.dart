@@ -100,6 +100,19 @@ void _checkMetadata(
   }
 }
 
+/// Checks one [question] on its own, with paths relative to the question
+/// (`prompt`, `options[1].text`, …). Uses the same rules as [validateQuiz],
+/// except uniqueness of question ids, which needs the whole quiz.
+List<ValidationIssue> validateQuestion(Question question) {
+  final issues = <ValidationIssue>[];
+  _checkQuestion(issues, '', question);
+  // Paths come out as ".prompt"; drop the leading dot.
+  return [
+    for (final issue in issues)
+      ValidationIssue(issue.path.substring(1), issue.code, issue.message),
+  ];
+}
+
 void _checkQuestion(List<ValidationIssue> issues, String path, Question q) {
   _checkText(issues, '$path.prompt', q.prompt, 'Question prompt');
 
