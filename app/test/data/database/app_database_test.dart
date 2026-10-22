@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiz_core/quiz_core.dart' show Grade;
 import 'package:study_better/data/database/app_database.dart';
 
 void main() {
@@ -177,7 +178,7 @@ void main() {
 
   test('review log appends entries with increasing ids', () async {
     await db.into(db.decks).insert(deck('d1'));
-    for (final grade in ['good', 'again']) {
+    for (final grade in [Grade.good, Grade.again]) {
       await db
           .into(db.reviewLog)
           .insert(
@@ -193,7 +194,7 @@ void main() {
     final rows = await (db.select(
       db.reviewLog,
     )..orderBy([(r) => OrderingTerm.asc(r.id)])).get();
-    expect(rows.map((r) => r.grade), ['good', 'again']);
+    expect(rows.map((r) => r.grade), [Grade.good, Grade.again]);
     expect(rows.last.id, greaterThan(rows.first.id));
   });
 

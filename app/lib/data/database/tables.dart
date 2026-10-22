@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:quiz_core/quiz_core.dart' show Grade;
 
 import 'converters.dart';
 import 'library_item_row.dart';
@@ -118,8 +119,7 @@ class ReviewLog extends Table {
   TextColumn get cardId => text()();
   DateTimeColumn get reviewedAt => dateTime()();
 
-  /// `again`, `hard`, `good` or `easy`.
-  TextColumn get grade => text()();
+  TextColumn get grade => textEnum<Grade>()();
 }
 
 /// App settings as key/value pairs.
