@@ -6,6 +6,10 @@ Windows ZIP, APK and AAB. Windows integration tests must pass before packaging.
 The Windows ZIP contains the executable, plugins and data directory together.
 Extract the entire ZIP before running StudyBetter.exe.
 
+Pull requests get test builds from the CI workflow: a Windows ZIP and a
+debug-signed APK, attached to the run as artifacts for 14 days. They need no
+secrets and are not for distribution.
+
 Configure these repository Actions secrets before Android release builds:
 
 - `ANDROID_KEYSTORE_BASE64`: base64-encoded JKS upload keystore.

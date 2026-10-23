@@ -93,3 +93,47 @@ jobs:
         working-directory: app
       - run: flutter test integration_test -d windows
         working-directory: app
+      # Pushes to main are packaged by release.yml; PRs get a test build here.
+      - name: Build Windows
+        if: github.event_name == 'pull_request'
+        run: flutter build windows --release
+        working-directory: app
+      - name: Package Windows build
+        if: github.event_name == 'pull_request'
+        run: Compress-Archive -Path app/build/windows/x64/runner/Release/* -DestinationPath StudyBetter-windows-pr.zip
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: StudyBetter-windows-pr-${{ github.event.pull_request.number }}
+          path: StudyBetter-windows-pr.zip
+          retention-days: 14
+
+  android-build:
+    name: Android debug build
+    # Pushes to main are built and signed by release.yml. PR builds use debug
+    # signing so they work without the release secrets (including fork PRs).
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+          cache: true
+      - run: dart pub get
+      - run: dart run build_runner build
+        working-directory: packages/quiz_core
+      - run: dart run build_runner build
+        working-directory: app
+      - run: flutter build apk --debug
+        working-directory: app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StudyBetter-android-pr-${{ github.event.pull_request.number }}
+          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
