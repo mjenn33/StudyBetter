@@ -47,18 +47,20 @@ void main() {
       updatedAt: DateTime.utc(2026),
       cards: const [Flashcard(id: 'card', front: 'Front', back: 'Back')],
     );
-    final api = _RestoreApi((path) async => switch (path) {
-      '/me' => {'username': 'sam'},
-      '/me/quizzes' => [
-        {'id': quiz.id},
-      ],
-      '/me/decks' => [
-        {'id': deck.id},
-      ],
-      '/quizzes/${quiz.id}' => _json(quiz.toJson()),
-      '/decks/${deck.id}' => _json(deck.toJson()),
-      _ => throw StateError('Unexpected path: $path'),
-    });
+    final api = _RestoreApi(
+      (path) async => switch (path) {
+        '/me' => {'username': 'sam'},
+        '/me/quizzes' => [
+          {'id': quiz.id},
+        ],
+        '/me/decks' => [
+          {'id': deck.id},
+        ],
+        _ when path == '/quizzes/${quiz.id}' => _json(quiz.toJson()),
+        _ when path == '/decks/${deck.id}' => _json(deck.toJson()),
+        _ => throw StateError('Unexpected path: $path'),
+      },
+    );
     addTearDown(api.close);
 
     final result = await restoreOwnedContent(
@@ -87,15 +89,17 @@ void main() {
     );
     await repository.save(base.copyWith(title: 'Local edits'));
     final server = base.copyWith(version: 2, title: 'Server edits');
-    final api = _RestoreApi((path) async => switch (path) {
-      '/me' => {'username': 'sam'},
-      '/me/quizzes' => [
-        {'id': base.id},
-      ],
-      '/me/decks' => <Map<String, dynamic>>[],
-      '/quizzes/${base.id}' => _json(server.toJson()),
-      _ => throw StateError('Unexpected path: $path'),
-    });
+    final api = _RestoreApi(
+      (path) async => switch (path) {
+        '/me' => {'username': 'sam'},
+        '/me/quizzes' => [
+          {'id': base.id},
+        ],
+        '/me/decks' => <Map<String, dynamic>>[],
+        _ when path == '/quizzes/${base.id}' => _json(server.toJson()),
+        _ => throw StateError('Unexpected path: $path'),
+      },
+    );
     addTearDown(api.close);
 
     final result = await restoreOwnedContent(
