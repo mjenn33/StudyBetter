@@ -35,6 +35,7 @@ class Config {
   }
 
   static const defaultPort = 8080;
+
   /// The local Docker database is intentionally non-TLS. Hosted database URLs
   /// should include their provider's TLS option, normally `sslmode=require`.
   static const defaultDatabaseUrl =

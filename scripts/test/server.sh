@@ -10,6 +10,6 @@ for attempt in {1..60}; do
   sleep 1
 done
 port="$(docker port "$container" 5432/tcp | cut -d: -f2)"
-export TEST_DATABASE_URL="postgres://studybetter:studybetter@127.0.0.1:$port/studybetter"
+export TEST_DATABASE_URL="postgres://studybetter:studybetter@127.0.0.1:$port/studybetter?sslmode=disable"
 cd server
 dart test

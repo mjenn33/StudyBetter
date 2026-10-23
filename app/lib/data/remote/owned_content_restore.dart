@@ -44,8 +44,9 @@ Future<OwnedContentRestoreResult> restoreOwnedContent({
       await api.request('GET', '/me/quizzes') as List<dynamic>;
   for (final summary in quizSummaries.cast<Map<String, dynamic>>()) {
     try {
-      final json = await api.request('GET', '/quizzes/${summary['id']}')
-          as Map<String, dynamic>;
+      final json =
+          await api.request('GET', '/quizzes/${summary['id']}')
+              as Map<String, dynamic>;
       final document = parseDocument(json);
       if (document is! QuizDocument) throw StateError('Expected a quiz.');
       final stored = await quizzes.restoreOwnedRemote(
@@ -63,8 +64,9 @@ Future<OwnedContentRestoreResult> restoreOwnedContent({
   final deckSummaries = await api.request('GET', '/me/decks') as List<dynamic>;
   for (final summary in deckSummaries.cast<Map<String, dynamic>>()) {
     try {
-      final json = await api.request('GET', '/decks/${summary['id']}')
-          as Map<String, dynamic>;
+      final json =
+          await api.request('GET', '/decks/${summary['id']}')
+              as Map<String, dynamic>;
       final document = parseDocument(json);
       if (document is! DeckDocument) throw StateError('Expected a deck.');
       final stored = await decks.restoreOwnedRemote(

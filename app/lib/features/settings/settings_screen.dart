@@ -143,14 +143,17 @@ Future<void> _restorePublishedContent(
       'Restored ${result.restored} item${result.restored == 1 ? '' : 's'}.',
       if (result.skipped > 0)
         '${result.skipped} with newer local edits ${result.skipped == 1 ? 'was' : 'were'} kept.',
-      if (result.failed > 0)
-        '${result.failed} could not be restored.',
+      if (result.failed > 0) '${result.failed} could not be restored.',
     ].join(' ');
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(details)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(details)));
   } catch (error) {
     if (!context.mounted) return;
     Navigator.of(context, rootNavigator: true).pop();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$error')));
   }
 }
 
