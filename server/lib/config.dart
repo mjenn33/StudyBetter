@@ -6,7 +6,7 @@ import 'dart:math';
 /// | Variable       | Default                                                    |
 /// |----------------|------------------------------------------------------------|
 /// | `PORT`         | `8080`                                                     |
-/// | `DATABASE_URL` | `postgres://studybetter:studybetter@localhost:5432/studybetter` |
+/// | `DATABASE_URL` | `postgres://studybetter:studybetter@localhost:5432/studybetter?sslmode=disable` |
 /// | `JWT_SECRET`   | random per process (tokens stop working after a restart)  |
 class Config {
   const Config({
@@ -35,8 +35,10 @@ class Config {
   }
 
   static const defaultPort = 8080;
+  /// The local Docker database is intentionally non-TLS. Hosted database URLs
+  /// should include their provider's TLS option, normally `sslmode=require`.
   static const defaultDatabaseUrl =
-      'postgres://studybetter:studybetter@localhost:5432/studybetter';
+      'postgres://studybetter:studybetter@localhost:5432/studybetter?sslmode=disable';
 
   final int port;
   final String databaseUrl;

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/providers.dart';
 import '../../data/remote/api_client.dart';
+import '../../data/remote/owned_content_restore.dart';
 import '../../app/preferences.dart';
 import '../account/account_screen.dart';
 
@@ -57,6 +58,13 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
             ListTile(
+              title: const Text('Restore my published content'),
+              subtitle: const Text(
+                'Download your quizzes and decks without overwriting local edits.',
+              ),
+              onTap: () => _restorePublishedContent(context, ref),
+            ),
+            ListTile(
               title: const Text('Server address'),
               subtitle: Text(ref.watch(serverUrlProvider).value ?? 'Loading…'),
               onTap: () async {
@@ -103,6 +111,46 @@ class SettingsScreen extends ConsumerWidget {
         _ => const Center(child: CircularProgressIndicator()),
       },
     );
+  }
+}
+
+Future<void> _restorePublishedContent(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const AlertDialog(
+      content: Row(
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(width: 16),
+          Expanded(child: Text('Restoring your published content…')),
+        ],
+      ),
+    ),
+  );
+  try {
+    final result = await restoreOwnedContent(
+      api: await ref.read(apiClientProvider.future),
+      quizzes: ref.read(quizRepositoryProvider),
+      decks: ref.read(deckRepositoryProvider),
+    );
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+    final details = [
+      'Restored ${result.restored} item${result.restored == 1 ? '' : 's'}.',
+      if (result.skipped > 0)
+        '${result.skipped} with newer local edits ${result.skipped == 1 ? 'was' : 'were'} kept.',
+      if (result.failed > 0)
+        '${result.failed} could not be restored.',
+    ].join(' ');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(details)));
+  } catch (error) {
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
   }
 }
 

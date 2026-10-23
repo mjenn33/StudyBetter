@@ -161,12 +161,23 @@ abstract class LibraryRepository<T extends Table, D> {
   }
 
   /// Records publishing metadata without changing local content or study history.
+  ///
+  /// The document's version is made authoritative as well, so a subsequent
+  /// local save is always visibly newer than the last uploaded version.
   Future<void> markPublished(String id, String remoteId, int version) async {
     final row = await _row(id);
     if (row == null) throw ItemNotFoundException(id);
     if (!row.isOwnedByMe) throw ReadOnlyItemException(id);
+    final current = _decode(row);
+    final published = withRevision(
+      current,
+      version: version,
+      at: updatedAtOf(current),
+    );
     await (db.update(table)..where((_) => _columns.id.equals(id))).write(
       RawValuesInsertable({
+        'document': Variable(jsonEncode(encode(published))),
+        'version': Variable(version),
         'remote_id': Variable(remoteId),
         'remote_version': Variable(version),
       }),
@@ -199,6 +210,41 @@ abstract class LibraryRepository<T extends Table, D> {
         ownerName: ownerName,
         downloadedAt: _now(),
       );
+    });
+  }
+
+  /// Restores an item owned by the signed-in user without replacing edits that
+  /// only exist on this device.
+  ///
+  /// Returns `false` when a local item either has a different remote identity
+  /// or is newer than the last server version the device received. In both
+  /// cases the caller should leave the local copy untouched and let the user
+  /// publish it explicitly.
+  Future<bool> restoreOwnedRemote(
+    D document, {
+    required String remoteId,
+    required int remoteVersion,
+    required String ownerName,
+  }) {
+    return db.transaction(() async {
+      final existing = await _row(idOf(document));
+      if (existing != null) {
+        if (existing.remoteId != remoteId ||
+            existing.remoteVersion == null ||
+            versionOf(_decode(existing)) > existing.remoteVersion!) {
+          return false;
+        }
+      }
+      await _write(
+        document,
+        origin: LibraryOrigin.local,
+        isOwnedByMe: true,
+        remoteId: remoteId,
+        remoteVersion: remoteVersion,
+        ownerName: ownerName,
+        downloadedAt: _now(),
+      );
+      return true;
     });
   }
 

@@ -100,7 +100,7 @@ void main() {
     );
     expect((await db.select(db.cardReviews).get()).single.repetitions, 2);
   });
-  test('publishing metadata does not bump the local content version', () async {
+  test('publishing metadata records the authoritative remote version', () async {
     final db = testDatabase();
     addTearDown(db.close);
     final repository = QuizRepository(db);
@@ -108,7 +108,7 @@ void main() {
     await repository.markPublished(quiz.id, quiz.id, 3);
     final entry = (await repository.getById(quiz.id))!;
     expect(entry.remoteVersion, 3);
-    expect(entry.document.version, quiz.version);
+    expect(entry.document.version, 3);
     expect(entry.isReadOnly, false);
   });
 }

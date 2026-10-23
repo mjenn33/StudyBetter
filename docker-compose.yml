@@ -25,7 +25,7 @@ services:
       dockerfile: server/Dockerfile
     environment:
       PORT: 8080
-      DATABASE_URL: postgres://${POSTGRES_USER:-studybetter}:${POSTGRES_PASSWORD:-studybetter}@db:5432/${POSTGRES_DB:-studybetter}
+      DATABASE_URL: postgres://${POSTGRES_USER:-studybetter}:${POSTGRES_PASSWORD:-studybetter}@db:5432/${POSTGRES_DB:-studybetter}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET:-}
     ports:
       - "${SERVER_PORT:-8080}:8080"

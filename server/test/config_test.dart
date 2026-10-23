@@ -7,6 +7,7 @@ void main() {
 
     expect(config.port, Config.defaultPort);
     expect(config.databaseUrl, Config.defaultDatabaseUrl);
+    expect(config.databaseUrl, contains('sslmode=disable'));
     expect(config.jwtSecret, isNotEmpty);
     expect(config.jwtSecretIsGenerated, isTrue);
   });
@@ -14,12 +15,12 @@ void main() {
   test('reads values from the environment', () {
     final config = Config.fromEnvironment(const {
       'PORT': '9090',
-      'DATABASE_URL': 'postgres://u:p@db:5432/x',
+      'DATABASE_URL': 'postgres://u:p@db:5432/x?sslmode=require',
       'JWT_SECRET': 'secret',
     });
 
     expect(config.port, 9090);
-    expect(config.databaseUrl, 'postgres://u:p@db:5432/x');
+    expect(config.databaseUrl, 'postgres://u:p@db:5432/x?sslmode=require');
     expect(config.jwtSecret, 'secret');
     expect(config.jwtSecretIsGenerated, isFalse);
   });
